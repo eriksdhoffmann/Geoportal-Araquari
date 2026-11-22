@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"nome":"Trecho Cicloviário","tipo":"Ciclovia / Ciclofaixa","pavimento":"concrete","fonte":"OpenStreetMap"},"geometry":{"type":"LineString","coordinates":[[-48.7519,-26.46891],[-48.74889,-26.46636]]}}]}
