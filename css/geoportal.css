@@ -137,6 +137,15 @@ select {
   gap: 8px;
 }
 
+.gp-municipal-logo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+  filter: drop-shadow(0 1px 3px rgba(3, 60, 142, 0.22));
+}
+
 .gp-municipal-text {
   display: flex;
   flex-direction: column;
