@@ -680,6 +680,7 @@ window.GeoTools = (() => {
         { key: 'areas_industriais_araquari', type: 'Área Industrial', badge: 'Indústria', layer: 'areas_industriais_araquari', sub: (p) => p.classe || 'Zona Industrial' },
         { key: 'pracas_lazer_araquari', type: 'Praça / Lazer', badge: 'Lazer', layer: 'pracas_lazer_araquari', sub: (p) => p.tipo || 'Espaço Público' },
         { key: 'incra_sigef_araquari', type: 'Parcela INCRA/SIGEF', badge: 'SIGEF', layer: 'incra_sigef_araquari', sub: (p) => `${p.natureza || 'Imóvel Rural'} • ${p.area_hectares || '-'} ha` },
+        { key: 'ibge_bc25_localidades', type: 'Sede / Vila Oficial (IBGE)', badge: 'IBGE', layer: 'ibge_bc25_localidades', sub: (p) => p.categoria || 'Localidade Oficial' },
       ];
       for (const src of poiSources) {
         for (const f of bundle[src.key]?.features || []) {
@@ -721,9 +722,26 @@ window.GeoTools = (() => {
         }
       }
 
-      // 6. Rodovias (BR-101, BR-280, SC-415) e Sistema Viário Municipal
+      // 6. Rodovias Oficiais (DNIT SNV) + OSM e Sistema Viário Municipal
       if (q.length >= 2 && !coordHit) {
         const seenRoad = new Set();
+        for (const f of bundle.dnit_snv_rodovias?.features || []) {
+          const p = f.properties || {};
+          const label = `${p.codigo_br || 'BR'} (${p.codigo_snv || ''}) — ${p.local_inicio || ''} ↔ ${p.local_fim || ''}`;
+          if (!norm(label).includes(qNorm)) continue;
+          const k = norm(p.codigo_snv || label);
+          if (seenRoad.has(k)) continue;
+          seenRoad.add(k);
+          results.push({
+            type: 'Rodovia DNIT',
+            badge: 'DNIT',
+            title: `${p.codigo_br || 'BR'} — ${p.codigo_snv || ''}`,
+            subtitle: `${p.local_inicio || ''} ↔ ${p.local_fim || ''} (km ${p.km_inicio}–${p.km_fim})`,
+            geojson: f,
+            activateLayer: 'dnit_snv_rodovias',
+          });
+          if (seenRoad.size >= 4) break;
+        }
         for (const f of bundle.rodovias_araquari?.features || []) {
           const p = f.properties || {};
           const label = p.ref && p.nome && p.nome !== p.ref ? `${p.ref} — ${p.nome}` : p.nome || p.ref || '';

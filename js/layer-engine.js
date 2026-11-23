@@ -193,6 +193,27 @@ window.GeoLayerEngine = (() => {
     // Edificações OSM
     uso_osm: 'Tipo (OSM)',
     pavimentos: 'Pavimentos (OSM)',
+    // DNIT SNV/OAE & IBGE BC25-SC (Fase 3)
+    codigo_br: 'Rodovia Federal (BR)',
+    codigo_snv: 'Código SNV (DNIT)',
+    tipo_trecho: 'Tipo de Trecho SNV',
+    local_inicio: 'Início do Trecho',
+    local_fim: 'Fim do Trecho',
+    km_inicio: 'km Inicial',
+    km_fim: 'km Final',
+    superficie: 'Superfície / Pavimento',
+    versao_snv: 'Versão SNV Vigente',
+    extensao_km: 'Extensão (km)',
+    codigo_oae: 'Código OAE (DNIT)',
+    codigo_sgo: 'Código SGO',
+    classe_mapa: 'Identificação / Jurisdição',
+    tipovia: 'Tipo de Via (IBGE)',
+    revestimento: 'Revestimento',
+    nrpistas: 'Nº de Pistas',
+    nrfaixas: 'Nº de Faixas',
+    situacaofisica: 'Situação Física',
+    material: 'Material Construtivo',
+    modal: 'Modal de Uso',
   };
 
   function prettyFieldName(key) {
