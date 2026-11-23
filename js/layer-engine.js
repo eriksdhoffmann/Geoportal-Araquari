@@ -164,6 +164,35 @@ window.GeoLayerEngine = (() => {
     classe: 'Classe',
     setor: 'Setor Industrial',
     esporte: 'Modalidade / Uso',
+    // IBGE CNEFE 2022 & Logradouros
+    l: 'Logradouro',
+    n: 'Número Predial',
+    b: 'Localidade / Bairro',
+    c: 'CEP',
+    e: 'Espécie CNEFE',
+    q: 'Quadra (IBGE)',
+    f: 'Face (IBGE)',
+    s: 'Código do Setor',
+    localidade: 'Localidade / Bairro',
+    cep: 'CEP',
+    qtd_enderecos: 'Qtd. Endereços Cadastrados',
+    faixa_numerica: 'Faixa Numérica Predial',
+    logradouro: 'Logradouro',
+    numero: 'Número Predial',
+    cod_especie: 'Código Espécie CNEFE',
+    // INCRA / SIGEF
+    nome_area: 'Denominação da Área / Imóvel',
+    parcela_codigo: 'Código da Parcela (SIGEF)',
+    codigo_imovel: 'Código do Imóvel (SNCR)',
+    status: 'Status INCRA',
+    situacao_informada: 'Situação Registral',
+    registro_matricula: 'Matrícula RI',
+    registro_cns: 'Cartório (CNS)',
+    area_hectares: 'Área Certificada (ha)',
+    data_aprovacao: 'Data de Aprovação',
+    // Edificações OSM
+    uso_osm: 'Tipo (OSM)',
+    pavimentos: 'Pavimentos (OSM)',
   };
 
   function prettyFieldName(key) {
@@ -655,7 +684,7 @@ window.GeoLayerEngine = (() => {
         .filter(Boolean);
     }
 
-    // ---- Estilização e Popups ----
+    // ---- Estilização e Popups Didáticos ----
     function computeFeatureStyle(cfg, feature, opacityOverride) {
       const op = opacityOverride ?? cfg.opacity ?? 0.65;
       const props = feature?.properties || {};
@@ -700,10 +729,37 @@ window.GeoLayerEngine = (() => {
       };
     }
 
-    function buildFeaturePopupHtml(cfg, feature) {
+    function findOverlappingPoints(geojson, clickedFeature, tolDeg = 0.00018) {
+      if (!geojson?.features?.length || !clickedFeature?.geometry) return [clickedFeature];
+      const gt = clickedFeature.geometry.type;
+      if (gt !== 'Point') return [clickedFeature];
+      const [cx, cy] = clickedFeature.geometry.coordinates || [];
+      if (cx === undefined || cy === undefined) return [clickedFeature];
+      const tolSq = tolDeg * tolDeg;
+      const matches = [clickedFeature];
+      for (const f of geojson.features) {
+        if (f === clickedFeature || f.geometry?.type !== 'Point') continue;
+        const [fx, fy] = f.geometry.coordinates || [];
+        if ((fx - cx) * (fx - cx) + (fy - cy) * (fy - cy) <= tolSq) {
+          matches.push(f);
+          if (matches.length >= 12) break;
+        }
+      }
+      return matches;
+    }
+
+    function buildFeaturePopupHtml(cfg, feature, pagerState = null) {
       const props = feature?.properties || {};
       const titleVal = cfg.titleField ? formatFieldValue(cfg.titleField, props[cfg.titleField]) : null;
       const heading = titleVal ? `${escapeHtml(cfg.name)} — ${escapeHtml(titleVal)}` : escapeHtml(cfg.name);
+
+      const metaEntry = window.GeoMetadata?.getEntry(cfg.id, cfg);
+      const badge = window.GeoMetadata?.getSourceBadgeMeta(metaEntry?.sourceClass || 'Oficial') || {
+        label: 'Oficial',
+        cls: 'src-oficial',
+      };
+      const classRaw = cfg.colorField ? props[cfg.colorField] : null;
+      const classMeaning = classRaw && window.GeoMetadata ? window.GeoMetadata.getClassHelp(cfg.id, classRaw) : '';
 
       const rows = [];
       const shown = new Set();
@@ -717,7 +773,7 @@ window.GeoLayerEngine = (() => {
         }
       }
       for (const [k, v] of Object.entries(props)) {
-        if (rows.length >= 10) break;
+        if (rows.length >= 12) break;
         const lk = k.toLowerCase();
         if (HIDDEN_FIELDS.has(lk) || shown.has(lk)) continue;
         const val = formatFieldValue(k, v);
@@ -727,17 +783,51 @@ window.GeoLayerEngine = (() => {
         }
       }
 
+      const warnBox =
+        metaEntry?.sourceClass === 'Digitalização não oficial'
+          ? `<div class="geo-popup-warn">⚠️ <b>Atenção:</b> Digitalização não oficial a partir de mapa oficial em PDF. Consulte a Prefeitura para validação legal exata.</div>`
+          : metaEntry?.sourceClass === 'Colaborativa'
+          ? `<div class="geo-popup-warn">ℹ️ <b>Fonte Colaborativa (OSM):</b> Referência comunitária não oficial.</div>`
+          : '';
+
+      const didactBox = metaEntry?.whatIsThis
+        ? `<div class="geo-popup-what">
+             <div><b>O que é isto?</b> ${escapeHtml(metaEntry.whatIsThis)}</div>
+             ${classMeaning ? `<div class="geo-popup-class-meaning"><b>${escapeHtml(String(classRaw))}:</b> ${escapeHtml(classMeaning)}</div>` : ''}
+           </div>`
+        : '';
+
+      const pagerHtml =
+        pagerState && pagerState.items.length > 1
+          ? `<div class="geo-popup-pager">
+               <button type="button" class="gp-opt-btn gp-popup-pager-btn" data-pager-dir="-1">◀ Anterior</button>
+               <span>Registro <b>${pagerState.index + 1}</b> de <b>${pagerState.items.length}</b> neste local</span>
+               <button type="button" class="gp-opt-btn gp-popup-pager-btn" data-pager-dir="1">Próximo ▶</button>
+             </div>`
+          : '';
+
       return `
         <div class="geo-popup">
-          <div class="geo-popup-header">${heading}</div>
+          <div class="geo-popup-header">
+            <div class="geo-popup-title-txt">${heading}</div>
+            <span class="gp-src-pill ${badge.cls}">${escapeHtml(badge.label)}</span>
+          </div>
           <div class="geo-popup-body">
+            ${pagerHtml}
+            ${warnBox}
+            ${didactBox}
             ${rows.length ? `<table class="geo-popup-table">${rows.join('')}</table>` : '<p class="geo-popup-empty">Sem atributos tabulares adicionais.</p>'}
+            <div class="geo-popup-footer">
+              <span class="geo-popup-src-txt">Fonte: ${escapeHtml(metaEntry?.metadata?.orgao_responsavel || 'Não informado pela fonte')}</span>
+              <button type="button" class="gp-opt-btn" data-open-meta="${escapeHtml(cfg.id)}">ⓘ Metadados</button>
+            </div>
           </div>
         </div>`;
     }
 
-    function buildGeoJsonLayer(cfg, geojson, opacity, paneName) {
+    function buildGeoJsonLayer(cfg, geojson, opacity, paneName, fullGeoJson = null) {
       const layerRenderer = L.canvas({ pane: paneName, padding: 0.45 });
+      const searchPool = fullGeoJson || geojson;
 
       return L.geoJSON(geojson, {
         pane: paneName,
@@ -781,9 +871,12 @@ window.GeoLayerEngine = (() => {
           layer.on('click', (ev) => {
             if (callbacks.shouldInterceptClick?.()) return;
             L.DomEvent.stopPropagation(ev);
-            L.popup({ maxWidth: 360, className: 'geo-custom-popup' })
+            const colocated = findOverlappingPoints(searchPool, feature);
+            const pagerState = { cfg, items: colocated, index: 0, latlng: ev.latlng };
+            window.__GEO_ACTIVE_POPUP_PAGER = pagerState;
+            L.popup({ maxWidth: 380, className: 'geo-custom-popup' })
               .setLatLng(ev.latlng)
-              .setContent(buildFeaturePopupHtml(cfg, feature))
+              .setContent(buildFeaturePopupHtml(cfg, colocated[0], pagerState))
               .openOn(map);
           });
         },
@@ -884,27 +977,89 @@ window.GeoLayerEngine = (() => {
       state.labelGroup = null;
     }
 
-    function attachLayerData(state, geojson) {
+    function geomIntersectsBounds(geom, b) {
+      if (!geom) return false;
+      const west = b.getWest();
+      const south = b.getSouth();
+      const east = b.getEast();
+      const north = b.getNorth();
+      const coordsIn = (c) => {
+        if (!Array.isArray(c)) return false;
+        if (typeof c[0] === 'number') {
+          return c[0] >= west && c[0] <= east && c[1] >= south && c[1] <= north;
+        }
+        return c.some(coordsIn);
+      };
+      if (geom.type === 'GeometryCollection') {
+        return (geom.geometries || []).some((g) => geomIntersectsBounds(g, b));
+      }
+      return coordsIn(geom.coordinates);
+    }
+
+    function filterGeoJsonByBounds(geojson, bounds, cap = 3500) {
+      const padded = bounds.pad(0.18);
+      const out = [];
+      for (const f of geojson?.features || []) {
+        if (geomIntersectsBounds(f.geometry, padded)) {
+          out.push(f);
+          if (out.length >= cap) break;
+        }
+      }
+      return { type: 'FeatureCollection', features: out };
+    }
+
+    function renderVectorState(state) {
       const { cfg, paneName } = state;
+      const fullGj = state.geojson;
       clearStateMapObjects(state);
 
-      const gl = buildGeoJsonLayer(cfg, geojson, state.opacity, paneName);
+      if (cfg.minZoom && map.getZoom() < cfg.minZoom) {
+        state.belowMinZoom = true;
+        state.renderedCount = 0;
+        syncLayerZIndexes();
+        callbacks.onStateChange?.();
+        return;
+      }
+
+      state.belowMinZoom = false;
+      const displayGj = cfg.viewportFilter ? filterGeoJsonByBounds(fullGj, map.getBounds(), 3500) : fullGj;
+      const gl = buildGeoJsonLayer(cfg, displayGj, state.opacity, paneName, fullGj);
       gl.addTo(map);
 
       let lg = null;
       if (cfg.labelField) {
-        lg = buildLabelsGroup(cfg, geojson);
+        lg = buildLabelsGroup(cfg, displayGj);
         if (lg && map.getZoom() >= 12) lg.addTo(map);
       }
 
       state.leafletLayer = gl;
       state.labelGroup = lg;
+      state.renderedCount = displayGj?.features?.length || 0;
+      syncLayerZIndexes();
+      callbacks.onStateChange?.();
+    }
+
+    function attachLayerData(state, geojson) {
       state.geojson = geojson;
       state.count = geojson?.features?.length || 0;
       state.loading = false;
       state.error = null;
-      syncLayerZIndexes();
-      callbacks.onStateChange?.();
+      renderVectorState(state);
+    }
+
+    if (!window.__GEO_PAGER_BOUND) {
+      window.__GEO_PAGER_BOUND = true;
+      document.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('.gp-popup-pager-btn');
+        if (!btn) return;
+        const st = window.__GEO_ACTIVE_POPUP_PAGER;
+        if (!st || !st.items?.length) return;
+        const dir = Number(btn.dataset.pagerDir || 1);
+        st.index = (st.index + dir + st.items.length) % st.items.length;
+        const content = buildFeaturePopupHtml(st.cfg, st.items[st.index], st);
+        const popupEl = btn.closest('.leaflet-popup-content');
+        if (popupEl) popupEl.innerHTML = content;
+      });
     }
 
     async function enableLayer(layerId) {
@@ -948,7 +1103,7 @@ window.GeoLayerEngine = (() => {
         labelGroup: null,
         geojson: null,
         opacity: cfg.opacity ?? 0.7,
-        loading: true,
+        loading: cfg.type !== 'wms',
         error: null,
         count: 0,
         controller,
@@ -956,6 +1111,38 @@ window.GeoLayerEngine = (() => {
       activeLayers.set(layerId, state);
       syncLayerZIndexes();
       callbacks.onStateChange?.();
+
+      if (cfg.type === 'wms') {
+        try {
+          const wms = attachTileRetry(
+            L.tileLayer.wms(cfg.url, {
+              layers: cfg.wmsLayers,
+              format: cfg.wmsFormat || 'image/png',
+              transparent: cfg.wmsTransparent !== false,
+              version: cfg.wmsVersion || '1.1.1',
+              styles: cfg.wmsStyles || '',
+              pane: paneName,
+              opacity: state.opacity,
+              minZoom: cfg.minZoom || 10,
+              maxZoom: cfg.maxZoom || 21,
+              bounds: cfg.bounds || ARAQUARI_BOUNDS,
+              attribution: cfg.attribution || '',
+              tileSize: 256,
+            }),
+            2
+          );
+          wms.addTo(map);
+          state.leafletLayer = wms;
+          state.loading = false;
+          syncLayerZIndexes();
+          callbacks.onStateChange?.();
+        } catch (err) {
+          state.loading = false;
+          state.error = err.message || 'Falha no serviço WMS';
+          callbacks.onStateChange?.();
+        }
+        return;
+      }
 
       try {
         const gj = await resolveLayerGeoJson(cfg, controller.signal);
@@ -995,7 +1182,11 @@ window.GeoLayerEngine = (() => {
       const state = activeLayers.get(layerId);
       if (!state) return;
       state.opacity = opacity;
-      if (state.leafletLayer) {
+      if (state.cfg.type === 'wms' && state.leafletLayer?.setOpacity) {
+        state.leafletLayer.setOpacity(opacity);
+        return;
+      }
+      if (state.leafletLayer?.eachLayer) {
         state.leafletLayer.eachLayer((sub) => {
           if (sub instanceof L.CircleMarker) {
             sub.setStyle({ fillOpacity: Math.min(1, opacity), opacity: Math.min(1, opacity) });
@@ -1008,7 +1199,11 @@ window.GeoLayerEngine = (() => {
 
     function zoomToLayer(layerId) {
       const state = activeLayers.get(layerId);
-      if (state?.leafletLayer) {
+      if (state?.cfg?.minZoom && map.getZoom() < state.cfg.minZoom) {
+        map.setView(ARAQUARI_URBAN_CENTER, Math.max(state.cfg.minZoom, map.getZoom()));
+        return true;
+      }
+      if (state?.leafletLayer?.getBounds) {
         const b = state.leafletLayer.getBounds();
         if (b && b.isValid()) {
           map.fitBounds(b, { padding: [36, 36], maxZoom: 17 });
@@ -1023,10 +1218,13 @@ window.GeoLayerEngine = (() => {
       for (const id of [...activeLayers.keys()]) disableLayer(id);
     }
 
-    map.on('zoomend', () => {
+    map.on('moveend zoomend', () => {
       const z = map.getZoom();
       for (const [, state] of activeLayers) {
-        if (state.labelGroup) {
+        if (state.cfg.type === 'wms') continue;
+        if (state.geojson && (state.cfg.viewportFilter || state.cfg.minZoom)) {
+          renderVectorState(state);
+        } else if (state.labelGroup) {
           const shouldShow = z >= 12;
           if (shouldShow && !map.hasLayer(state.labelGroup)) state.labelGroup.addTo(map);
           if (!shouldShow && map.hasLayer(state.labelGroup)) map.removeLayer(state.labelGroup);
@@ -1058,6 +1256,7 @@ window.GeoLayerEngine = (() => {
         'bairros_araquari',
         'distritos_araquari',
         'ibge_setores_censitarios_2022',
+        'incra_sigef_araquari',
         'sgb_setores_risco',
         'ima_bacias_hidrograficas',
         'funai_terras_indigenas',
@@ -1104,6 +1303,11 @@ window.GeoLayerEngine = (() => {
 
     function exportLayerGeoJSON(layerId) {
       const state = activeLayers.get(layerId);
+      const metaEntry = window.GeoMetadata?.getEntry(layerId, state?.cfg);
+      if (state?.cfg?.type === 'wms' || metaEntry?.redistributable === false) {
+        callbacks.onToast?.('Esta camada permite apenas visualização online (licença não redistribuível).', 'info');
+        return;
+      }
       if (!state?.geojson?.features?.length) {
         callbacks.onToast?.('Ative a camada e aguarde o carregamento antes de exportar.', 'info');
         return;
@@ -1206,16 +1410,38 @@ window.GeoLayerEngine = (() => {
     function getActiveLegends() {
       return getOrderedActiveLayers().map((state) => {
         const { cfg } = state;
+        const metaEntry = window.GeoMetadata?.getEntry(cfg.id, cfg);
+        const badge = window.GeoMetadata?.getSourceBadgeMeta(metaEntry?.sourceClass || 'Oficial') || {
+          label: 'Oficial',
+          cls: 'src-oficial',
+        };
         const entry = {
           id: cfg.id,
           name: cfg.name,
           geomType: cfg.geomType,
+          sourceClass: metaEntry?.sourceClass || 'Oficial',
+          badge,
+          whatIsThis: metaEntry?.whatIsThis || cfg.description || '',
           swatches: [],
         };
 
         if (cfg.colorMap) {
           for (const [label, color] of Object.entries(cfg.colorMap)) {
-            entry.swatches.push({ label, color });
+            entry.swatches.push({
+              label,
+              color,
+              meaning: window.GeoMetadata?.getClassHelp(cfg.id, label) || '',
+            });
+          }
+        } else if (cfg.legendItems) {
+          for (const it of cfg.legendItems) {
+            entry.swatches.push({
+              label: it.label,
+              color: it.color,
+              outline: it.outline,
+              dashed: it.dashed,
+              meaning: it.meaning || window.GeoMetadata?.getClassHelp(cfg.id, it.label) || '',
+            });
           }
         } else {
           const color =
@@ -1231,6 +1457,7 @@ window.GeoLayerEngine = (() => {
             color,
             outline: cfg.outlineMode,
             dashed: Boolean(cfg.style?.dashArray),
+            meaning: '',
           });
         }
         return entry;

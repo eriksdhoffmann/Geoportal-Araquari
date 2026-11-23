@@ -672,29 +672,52 @@ window.GeoTools = (() => {
         }
       }
 
-      // 5. Saúde (CNES), Escolas, Equipamentos Públicos e Polos Industriais
+      // 5. Saúde (CNES), Escolas, Equipamentos Públicos e Polos Industriais & INCRA SIGEF
       const poiSources = [
         { key: 'unidades_saude_cnes', type: 'Unidade de Saúde (CNES)', badge: 'Saúde', layer: 'unidades_saude_cnes', sub: (p) => `${p.endereco || ''} • ${p.bairro || ''}` },
         { key: 'escolas_araquari', type: 'Educação', badge: 'Escola', layer: 'escolas_araquari', sub: (p) => `${p.categoria || 'Escola'}${p.bairro ? ' • ' + p.bairro : ''}` },
         { key: 'equipamentos_publicos_araquari', type: 'Equipamento Público', badge: 'Público', layer: 'equipamentos_publicos_araquari', sub: (p) => p.tipo || 'Araquari/SC' },
         { key: 'areas_industriais_araquari', type: 'Área Industrial', badge: 'Indústria', layer: 'areas_industriais_araquari', sub: (p) => p.classe || 'Zona Industrial' },
         { key: 'pracas_lazer_araquari', type: 'Praça / Lazer', badge: 'Lazer', layer: 'pracas_lazer_araquari', sub: (p) => p.tipo || 'Espaço Público' },
+        { key: 'incra_sigef_araquari', type: 'Parcela INCRA/SIGEF', badge: 'SIGEF', layer: 'incra_sigef_araquari', sub: (p) => `${p.natureza || 'Imóvel Rural'} • ${p.area_hectares || '-'} ha` },
       ];
       for (const src of poiSources) {
         for (const f of bundle[src.key]?.features || []) {
           const p = f.properties || {};
-          const hay = norm(`${p.nome || ''} ${p.endereco || ''} ${p.bairro || ''} ${p.tipo || ''}`);
+          const hay = norm(`${p.nome || ''} ${p.nome_area || ''} ${p.codigo_imovel || ''} ${p.endereco || ''} ${p.bairro || ''} ${p.tipo || ''}`);
           if (hay.includes(qNorm)) {
             results.push({
               type: src.type,
               badge: src.badge,
-              title: p.nome || src.type,
+              title: p.nome || p.nome_area || src.type,
               subtitle: src.sub(p),
               geojson: f,
               activateLayer: src.layer,
             });
             if (results.length >= 16) break;
           }
+        }
+      }
+
+      // 5B. Logradouros Oficiais IBGE CNEFE 2022
+      if (q.length >= 3 && !coordHit) {
+        const seenCnefe = new Set();
+        for (const f of bundle.cnefe_logradouros_araquari?.features || []) {
+          const p = f.properties || {};
+          const nome = p.nome || '';
+          if (!nome || !norm(`${nome} ${p.cep || ''} ${p.localidade || ''}`).includes(qNorm)) continue;
+          const k = `${norm(nome)}|${p.localidade || ''}`;
+          if (seenCnefe.has(k)) continue;
+          seenCnefe.add(k);
+          results.push({
+            type: 'Logradouro CNEFE 2022',
+            badge: 'CNEFE',
+            title: nome,
+            subtitle: `${p.localidade || ''} • CEP ${p.cep || '-'} (${p.qtd_enderecos || 0} endereços)`,
+            geojson: f,
+            activateLayer: 'cnefe_logradouros_araquari',
+          });
+          if (seenCnefe.size >= 5) break;
         }
       }
 

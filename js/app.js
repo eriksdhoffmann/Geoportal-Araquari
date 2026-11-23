@@ -130,6 +130,23 @@
   engine.enableLayer('limite_municipal_ibge');
   engine.enableLayer('bairros_araquari');
 
+  // Deep-linking via ?layer=id1,id2 (ex: vindo de downloads.html)
+  (() => {
+    const params = new URLSearchParams(window.location.search);
+    const reqLayers = (params.get('layer') || '').split(',').map((s) => s.trim()).filter(Boolean);
+    const reqBasemap = (params.get('basemap') || '').trim();
+    if (reqBasemap) engine.setBasemapActive(reqBasemap, true, true);
+    if (reqLayers.length) {
+      reqLayers.forEach((lid, i) => {
+        const found = window.GeoCatalog.getLayerById(lid);
+        if (found) expandedGroups.add(found.group.id);
+        engine.enableLayer(lid).then(() => {
+          if (i === 0) engine.zoomToLayer(lid);
+        });
+      });
+    }
+  })();
+
   // ==================== CONTROLE DE CAMADAS ====================
   function getLayerSwatchStyle(cfg) {
     if (cfg.geomType === 'point') {
@@ -248,15 +265,23 @@
         const isOn = Boolean(st);
         const sw = getLayerSwatchStyle(l);
         const optOpen = openOptionsLayerId === l.id;
+        const metaEntry = window.GeoMetadata?.getEntry(l.id, l);
+        const srcBadge = window.GeoMetadata?.getSourceBadgeMeta(metaEntry?.sourceClass || 'Oficial') || { label: 'Oficial', cls: 'src-oficial' };
 
         let badgeHtml = '';
         if (st?.loading) {
           badgeHtml = '<span class="gp-spinner" title="Carregando feições..."></span>';
         } else if (st?.error) {
           badgeHtml = `<button class="gp-badge-error" data-layer-retry="${l.id}" title="${escapeHtml(st.error)}">Erro ↻</button>`;
+        } else if (isOn && st.belowMinZoom) {
+          badgeHtml = `<button class="gp-badge-zoom" data-opt-zoom="${l.id}" title="Aproxime até o zoom ${l.minZoom} para visualizar">Zoom ≥ ${l.minZoom}</button>`;
         } else if (isOn && st.count > 0) {
-          badgeHtml = `<span class="gp-badge-count" title="${st.count} feições carregadas">${st.count}</span>`;
+          badgeHtml = `<span class="gp-badge-count" title="${st.count} feições">${st.count}</span>`;
+        } else if (isOn && l.type === 'wms') {
+          badgeHtml = `<span class="gp-badge-count" title="Serviço WMS ao vivo">WMS</span>`;
         }
+
+        const shortSrc = srcBadge.label === 'Digitalização de Lei' ? 'Digit.' : srcBadge.label === 'Colaborativa' ? 'OSM' : srcBadge.label === 'Científica' ? 'Cient.' : 'Oficial';
 
         parts.push(`
           <div class="gp-layer-row is-child">
@@ -264,14 +289,18 @@
             <span class="${sw.cls}" style="background:${sw.bg};${sw.border ? `border:${sw.border}` : ''}"></span>
             <span class="gp-layer-label" data-layer-label="${l.id}">${escapeHtml(l.name)}</span>
             <div class="gp-layer-meta-inline">
+              <span class="gp-src-pill ${srcBadge.cls}" title="${escapeHtml(srcBadge.title || '')}">${escapeHtml(shortSrc)}</span>
               ${badgeHtml}
-              <button class="gp-row-btn" data-layer-opts="${l.id}" title="Opções da camada (ordem, opacidade, zoom, exportar)">•••</button>
+              <button class="gp-row-btn" data-open-meta="${l.id}" title="Ficha de Metadados (21 campos) & O que é isto?">ⓘ</button>
+              <button class="gp-row-btn" data-layer-opts="${l.id}" title="Opções da camada (ordem, opacidade, zoom, legenda, exportar)">•••</button>
             </div>
           </div>
         `);
 
         if (optOpen) {
           const curOpacity = Math.round((st?.opacity ?? l.opacity ?? 0.7) * 100);
+          const canExport = metaEntry?.redistributable !== false && l.type !== 'wms' && !l.isUserLayer;
+          const whatTxt = metaEntry?.whatIsThis || l.description || '';
           parts.push(`
             <div class="gp-layer-options">
               <div class="gp-opacity-row">
@@ -283,14 +312,15 @@
                 ${isOn ? `<button class="gp-opt-btn" data-move-layer="${l.id}" data-move-dir="top">↑ Frente</button>` : ''}
                 ${isOn ? `<button class="gp-opt-btn" data-move-layer="${l.id}" data-move-dir="bottom">↓ Trás</button>` : ''}
                 <button class="gp-opt-btn" data-opt-zoom="${l.id}">Aproximar</button>
-                <button class="gp-opt-btn" data-opt-export="${l.id}">GeoJSON</button>
+                <button class="gp-opt-btn" data-open-meta="${l.id}">ⓘ Metadados (21 campos)</button>
+                ${canExport ? `<button class="gp-opt-btn" data-opt-export="${l.id}">GeoJSON ↓</button>` : ''}
                 ${
                   l.officialUrl
-                    ? `<a class="gp-opt-btn" href="${l.officialUrl}" target="_blank" rel="noopener">SHP Oficial ↗</a>`
+                    ? `<a class="gp-opt-btn" href="${l.officialUrl}" target="_blank" rel="noopener">Fonte ↗</a>`
                     : ''
                 }
               </div>
-              ${l.description ? `<div class="gp-opt-desc">${escapeHtml(l.description)}</div>` : ''}
+              ${whatTxt ? `<div class="gp-opt-desc"><b>O que é isto?</b> ${escapeHtml(whatTxt)}</div>` : ''}
             </div>
           `);
         }
@@ -354,12 +384,13 @@
     const legends = engine.getActiveLegends();
     if (!legends.length) {
       container.innerHTML =
-        '<div class="gp-legend-panel"><div class="gp-search-empty">Nenhuma camada vetorial ativa no momento.</div></div>';
+        '<div class="gp-legend-panel"><div class="gp-search-empty">Nenhuma camada vetorial ativa no momento. Ative uma camada na aba "Camadas" para ver sua legenda e explicação didática.</div></div>';
       return;
     }
 
     const html = legends
       .map((leg) => {
+        const hasMeanings = leg.swatches.some((s) => s.meaning);
         const itemsHtml = leg.swatches
           .map((s) => {
             const cls =
@@ -371,13 +402,27 @@
             const style = s.outline
               ? `background:transparent;border:2px ${s.dashed ? 'dashed' : 'solid'} ${s.color === '#ffffff' ? '#0ea5e9' : s.color}`
               : `background:${s.color}`;
-            return `<div class="gp-legend-item"><span class="${cls}" style="${style}"></span><span>${escapeHtml(s.label)}</span></div>`;
+            return `
+              <div class="gp-legend-item ${hasMeanings ? 'has-meaning' : ''}">
+                <div class="gp-legend-row-head">
+                  <span class="${cls}" style="${style}"></span>
+                  <span class="gp-legend-lbl">${escapeHtml(s.label)}</span>
+                </div>
+                ${s.meaning ? `<div class="gp-legend-meaning">${escapeHtml(s.meaning)}</div>` : ''}
+              </div>`;
           })
           .join('');
         return `
           <div class="gp-legend-card">
-            <div class="gp-legend-title">${escapeHtml(leg.name)}</div>
-            <div class="gp-legend-grid">${itemsHtml}</div>
+            <div class="gp-legend-head">
+              <div class="gp-legend-title">${escapeHtml(leg.name)}</div>
+              <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+                <span class="gp-src-pill ${leg.badge?.cls || 'src-oficial'}">${escapeHtml(leg.badge?.label || 'Oficial')}</span>
+                <button class="gp-row-btn" data-open-meta="${escapeHtml(leg.id)}" title="Ver Metadados (21 campos)">ⓘ</button>
+              </div>
+            </div>
+            ${leg.whatIsThis ? `<div class="gp-legend-what"><b>O que é isto?</b> ${escapeHtml(leg.whatIsThis)}</div>` : ''}
+            <div class="gp-legend-grid ${hasMeanings ? 'is-detailed' : ''}">${itemsHtml}</div>
           </div>
         `;
       })
@@ -1298,6 +1343,75 @@
     renderLayerDrawer();
     showToast(`Mapa temático carregado: ${p.title}`, 'success');
   }
+
+  function openMetadataModal(layerId) {
+    const found = window.GeoCatalog.getLayerById(layerId);
+    const bm = !found ? BASEMAPS.find((b) => b.id === layerId) : null;
+    const cfg = found?.layer || bm;
+    if (!cfg || !window.GeoMetadata) return;
+
+    const entry = window.GeoMetadata.getEntry(layerId, { ...cfg, groupName: found?.group?.name });
+    const badge = window.GeoMetadata.getSourceBadgeMeta(entry.sourceClass);
+    const meta = entry.metadata;
+
+    modalTitle.textContent = `Ficha Técnica e Metadados — ${meta.nome_camada}`;
+    const rowsHtml = window.GeoMetadata.FIELD_LABELS.map(([k, lbl]) => {
+      const val = meta[k] || 'Não informado pela fonte';
+      const isUrl = typeof val === 'string' && /^https?:\/\//i.test(val);
+      const cell = isUrl
+        ? `<a href="${escapeHtml(val)}" target="_blank" rel="noopener" style="color:var(--brand-navy);word-break:break-all">${escapeHtml(val)} ↗</a>`
+        : escapeHtml(val);
+      return `<tr><th>${escapeHtml(lbl)}</th><td>${cell}</td></tr>`;
+    }).join('');
+
+    const classHelpEntries = Object.entries(entry.classHelp || {});
+    const classesHtml = classHelpEntries.length
+      ? `<div style="margin-top:14px">
+           <h4 style="margin:0 0 8px;color:var(--brand-navy);font-size:13.5px">Significado das Classes na Legenda</h4>
+           <div class="gp-meta-classes">
+             ${classHelpEntries.map(([k, v]) => `<div><b>${escapeHtml(k)}:</b> ${escapeHtml(v)}</div>`).join('')}
+           </div>
+         </div>`
+      : '';
+
+    const canExport = entry.redistributable !== false && cfg.localFile && cfg.type !== 'wms';
+    modalBody.innerHTML = `
+      <div class="gp-meta-hero">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <span class="gp-src-pill ${badge.cls}">${escapeHtml(badge.label)}</span>
+          <span style="font-size:12px;color:#475569">${escapeHtml(badge.title || '')}</span>
+        </div>
+        <div style="font-size:13.5px;color:#0f172a;line-height:1.45"><b>O que é isto?</b> ${escapeHtml(entry.whatIsThis)}</div>
+      </div>
+      <div class="gp-btn-row" style="margin-bottom:12px">
+        ${canExport ? `<a class="gp-btn primary" href="${escapeHtml(cfg.localFile)}" download>Baixar GeoJSON ↓</a>` : '<span class="gp-src-pill src-cientifica">Apenas visualização / serviço</span>'}
+        <a class="gp-btn" href="downloads.html?q=${encodeURIComponent(meta.nome_camada)}" target="_blank" rel="noopener">Abrir na Central de Downloads ↗</a>
+        ${cfg.localFile ? `<button class="gp-btn" id="btnMetaActivateOnMap">Ativar no Mapa</button>` : ''}
+      </div>
+      <table class="gp-meta-table">${rowsHtml}</table>
+      ${classesHtml}
+    `;
+
+    modalBackdrop?.classList.add('open');
+    document.getElementById('btnMetaActivateOnMap')?.addEventListener('click', () => {
+      closeModal();
+      if (found) {
+        expandedGroups.add(found.group.id);
+        engine.enableLayer(layerId).then(() => engine.zoomToLayer(layerId));
+      } else if (bm) {
+        engine.setBasemapActive(bm.id, true, true);
+      }
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    const metaBtn = e.target.closest('[data-open-meta]');
+    if (metaBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      openMetadataModal(metaBtn.dataset.openMeta);
+    }
+  });
 
   document.querySelectorAll('.gp-nav-btn[data-nav]').forEach((btn) => {
     btn.addEventListener('click', () => openNavSection(btn.dataset.nav));
