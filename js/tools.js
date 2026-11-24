@@ -681,6 +681,10 @@ window.GeoTools = (() => {
         { key: 'pracas_lazer_araquari', type: 'Praça / Lazer', badge: 'Lazer', layer: 'pracas_lazer_araquari', sub: (p) => p.tipo || 'Espaço Público' },
         { key: 'incra_sigef_araquari', type: 'Parcela INCRA/SIGEF', badge: 'SIGEF', layer: 'incra_sigef_araquari', sub: (p) => `${p.natureza || 'Imóvel Rural'} • ${p.area_hectares || '-'} ha` },
         { key: 'ibge_bc25_localidades', type: 'Sede / Vila Oficial (IBGE)', badge: 'IBGE', layer: 'ibge_bc25_localidades', sub: (p) => p.categoria || 'Localidade Oficial' },
+        { key: 'ibge_bc25_edif_ensino', type: 'Ensino Oficial (IBGE BC25)', badge: 'Ensino', layer: 'ibge_bc25_edif_ensino', sub: (p) => p.geometria_origem || 'IBGE BC25-SC' },
+        { key: 'aneel_subestacoes', type: 'Subestação Elétrica (ANEEL)', badge: 'ANEEL', layer: 'aneel_subestacoes', sub: (p) => p.agente || 'CELESC / ANEEL' },
+        { key: 'aneel_transmissao_linhas', type: 'Linha de Transmissão (ANEEL)', badge: 'ANEEL', layer: 'aneel_transmissao_linhas', sub: (p) => `${p.tensao || '138 kV'} • ${p.extensao_araquari_km || '-'} km em Araquari` },
+        { key: 'ibge_bc25_dutos', type: 'Duto / Oleoduto (IBGE BC25)', badge: 'Duto', layer: 'ibge_bc25_dutos', sub: (p) => `${p.tipo || 'Duto'} • ${p.extensao_km || '-'} km em Araquari` },
       ];
       for (const src of poiSources) {
         for (const f of bundle[src.key]?.features || []) {

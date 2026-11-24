@@ -249,6 +249,27 @@ window.GeoLayerEngine = (() => {
     importancia: 'Importância Biológica',
     prioridade_acao: 'Prioridade de Ação',
     acao_principal: 'Ação Preconizada (MMA)',
+    // Infraestrutura, Energia, Dutos e CNES (Fase 6)
+    esfera: 'Esfera Jurídica',
+    natureza_juridica: 'Natureza Jurídica (CNES)',
+    gestao: 'Gestão SUS',
+    data_atualizacao: 'Última Atualização (CNES)',
+    tensao: 'Tensão Nominal',
+    extensao_total: 'Extensão Total da Linha',
+    extensao_araquari_km: 'Extensão em Araquari (km)',
+    oid_aneel: 'Código OID (ANEEL)',
+    agente: 'Agente / Concessionária',
+    capacidade_aneel: 'Capacidade Registrada (ANEEL)',
+    concessionaria: 'Concessionária de Energia',
+    unidades_consumidoras: 'Unidades Consumidoras (ANEEL)',
+    area_km2_ibge: 'Área Oficial IBGE (km²)',
+    material_transp: 'Material Transportado',
+    nrdutos: 'Número de Dutos',
+    situacao_fisica: 'Situação Física',
+    especie: 'Espécie / Tipo',
+    operacional: 'Em Operação',
+    geometria_origem: 'Tipo de Registro (IBGE BC25)',
+    observacao: 'Observação Técnica',
   };
 
   function prettyFieldName(key) {
