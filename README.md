@@ -1,49 +1,52 @@
-# Geoportal Araquari — Base Geoespacial Integrada (SC)
+# Geoportal Araquari — Infraestrutura Municipal de Dados Geoespaciais (SC)
 
-Geoportal interativo do Município de **Araquari — Santa Catarina** (Código IBGE **`4201307`** — Área Oficial **`386,872 km²`**), desenvolvido no padrão visual e funcional do **Geoportal de Florianópolis**, reunindo em uma única plataforma **44 camadas geoespaciais oficiais verificadas** e **9 mapas base** (incluindo Ortoimagem Aérea Oficial SC 2012 de 39 cm e MDT/MDS via SIGSC HTTPS WMS + Satélite HD).
+Plataforma WebGIS aberta e gratuita para o município de **Araquari — Santa Catarina (IBGE `4201307`)**, estruturada no padrão visual e funcional do GeoPortal de Florianópolis, alimentada exclusivamente por dados reais, auditados e documentados em **21 campos de metadados**.
 
-- **GitHub Pages (Online):** https://eriksdhoffmann.github.io/Geoportal-Araquari/
-- **Execução Local (Offline/Local):** abra `index.html` no navegador ou execute `ABRIR_GEOPORTAL_ARAQUARI.bat`.
-
----
-
-## Principais Funcionalidades
-
-- **Interface padrão Geoportal de Florianópolis:** cabeçalho institucional com abas *Início* (6 conjuntos temáticos prontos), *Mapas Interativos*, *Download*, *Emissão de Documentos* e *Ajuda*.
-- **Recorte pelo Limite Oficial IBGE (`4201307`):** máscara vetorial limpa recortando o mapa ao limite exato de Araquari (com opção de ativar/desativar a qualquer momento para visualizar municípios vizinhos).
-- **Série Histórica, Relevo SIGSC e Cortina Comparativa (Antes × Depois):**
-  - **Satélite Alta Resolução (Atual — Esri / Maxar)**
-  - **Ortoimagem Aérea Oficial SC 2012 (SIGSC — 39 cm via HTTPS WMS)**
-  - **Satélite Híbrido**, **Satélite Clarity HD**, **Bing Satélite Aéreo**
-  - **MDT — Relevo Sombreado Oficial SC (SIGSC WMS)** e **MDS — Modelo Digital de Superfície SC (SIGSC WMS)**
-  - **OpenStreetMap** e **Carto Positron (Claro)**
-  - **Cortina arrastável** diretamente sobre o mapa para comparar o Satélite Atual contra a Ortofoto Oficial SC 2012 ou contra o MDT Relevo.
-- **Empilhamento Determinístico e Aba "Ordem":** cada camada possui pane e renderizador Canvas exclusivo, garantindo sobreposição fiel com controle de ordem (`▲ Subir` / `▼ Descer` / `↑ Frente` / `↓ Trás`), transparência individual, legenda automática e exportação em GeoJSON.
-- **Ferramentas GIS Integradas:**
-  - **Busca Unificada:** pesquisa instantânea por Bairro, Localidade, Rodovia (`BR-101`, `BR-280`, `SC-415`), Rua, Escola, Unidade de Saúde, Área Industrial, Terra Indígena, Setor de Risco ou Coordenada (`SIRGAS 2000 / UTM 22S` e `WGS84`).
-  - **Medição de Distância e Área:** traçado em camada SVG exclusiva no topo (`zIndex: 650`) com halo branco de alto contraste.
-  - **Desenho e Anotação:** crie pontos, linhas e polígonos e exporte em GeoJSON.
-  - **Raio-X Territorial do Ponto:** clique em qualquer local para consultar Bairro, Distrito, Setor Censitário 2022, Risco CPRM, Bacia Hidrográfica, Uso do Solo FBDS, APP, Geologia, Solos e coordenadas UTM 22S / WGS84 / DMS + link para Google Street View.
-  - **Importação Local de SIG:** arraste arquivos **Shapefile (`.zip`)**, **GeoJSON** ou **KML** (com reprojeção automática de SIRGAS 2000 UTM 22S para WGS84).
-- **100% Funcional Online e Local (`file://`):** todas as 44 camadas possuem cópia estruturada em `data/*.geojson` e bundles instantâneos (`js/araquari-bundle.js` + `js/araquari-bundle-extra.js`), eliminando falhas de CORS ou indisponibilidade de servidores externos.
+- **Acesso Online (GitHub Pages):** https://eriksdhoffmann.github.io/Geoportal-Araquari/
+- **Central de Downloads & Metadados:** https://eriksdhoffmann.github.io/Geoportal-Araquari/downloads.html
+- **Execução Local (Offline):** abra `index.html` diretamente no navegador ou execute `ABRIR_GEOPORTAL_ARAQUARI.bat`.
 
 ---
 
-## Fontes de Dados Integradas (9 Grupos • 44 Camadas)
+## Resumo do Acervo Integrado (Auditado)
 
-1. **Território, Limites e Censo IBGE 2022:** Limite Municipal Oficial (`4201307`), 10 Bairros Oficiais (Censo 2022), 2 Distritos (Araquari e Itapocu), 116 Setores Censitários (79 urbanos e 37 rurais) e 31 Localidades.
-2. **Planejamento Urbano, Perímetro e Indústria:** Perímetro / Área Urbana Consolidada (IBGE 2022), 23 Zonas Industriais / Polos Logísticos e manchas residenciais.
-3. **Meio Ambiente, Cobertura da Terra e FBDS:** Uso e Cobertura da Terra em alta resolução (`SC_4201307_USO` — 1.428 polígonos), APPs (`SC_4201307_APP` — 380 polígonos), Vegetação IBGE BDIA, Regiões Fitogeográficas IMA-SC, Áreas Úmidas/Manguezais SIGSC e 3 Terras Indígenas Guarani Mbya (Piraí, Tarumã e Pindoty — FUNAI).
-4. **Licenciamento e Fiscalização Ambiental (IMA-SC):** 619 processos de licenciamento (Sinfat), 258 autos de infração (GAIA) e 12 áreas de embargo ambiental.
-5. **Hidrografia e Recursos Hídricos:** Rios Simples (1.802 trechos), Rios Duplos (33), Massas d’Água (50) e Nascentes (177) da FBDS; Bacias Hidrográficas Itapocu e Cubatão Norte (IMA-SC); 407 Ottobacias e 137 Ilhas (SIGSC/ANA); 25 Poços Tubulares (SIAGAS / SGB-CPRM).
-6. **Defesa Civil e Riscos Hidrológicos:** 12 Setores Oficiais de Risco Alto a Inundação em Araquari (SGB/CPRM) e Isolinha Cota 5 m (Planície Costeira/Alagável).
-7. **Geologia, Geomorfologia, Solos e Altimetria:** Geologia (59 unidades), Geomorfologia (23) e Pedologia/Solos (34) do IBGE BDIA 1:250k; Domínios Hidrogeológicos SGB/CPRM; Curvas de Nível (10 m / 50 m) e Cota 20 m (SRTM/DEM).
-8. **Sistema Viário, Rodovias, Ferrovia e Mobilidade:** BR-101, BR-280, SC-415 (315 trechos), Sistema Viário Municipal (1.618 trechos), Malha Ferroviária (Ramal São Francisco do Sul), 36 Pontes/Viadutos, 75 Pontos de Ônibus e Ciclovias.
-9. **Equipamentos Públicos, Saúde, Educação e Lazer:** 19 Unidades de Saúde Oficiais (DataSUS/CNES), 20 Escolas/CEIs/IFC Campus Araquari, 15 Equipamentos Públicos e Patrimônio, 34 Praças/Parques e 6 pontos de Saneamento/Náutica.
+- **76 camadas vetoriais** (`36.439` feições geoespaciais, `16.56 MB`) organizadas em **11 grupos temáticos**.
+- **10 mapas base** (Satélite HD Maxar/Esri, Ortofoto Aérea Oficial SC 2012 SIGSC 39 cm, Sentinel-2 Cloudless 2024, MDT/MDS SIGSC, OpenStreetMap e Carto Positron) com **Cortina Comparativa (Antes × Depois)**.
+- **98 itens pesquisáveis** na Central de Downloads (`downloads.html`), com busca, filtros por classe de origem, ficha completa de 21 metadados e exportação em **GeoJSON** e **CSV**.
+- **Qualidade Auditada:** `0` geometrias inválidas, `0` erros de codificação UTF-8, `100%` de cobertura nos 21 campos de metadados.
+
+### Transparência por Classe de Origem
+
+| Classe de Origem | Camadas | Exemplos Principais |
+|---|---:|---|
+| **Oficial** | 48 | IBGE (Censo 2022, CNEFE, BC25-SC, BDIA), INCRA/SIGEF, DNIT (SNV/OAE), IMA-SC (SINFAT/APP/Declividade), SGB/CPRM, FUNAI, MMA, ANEEL SIGEL, DataSUS/CNES, IPHAN/CNSA |
+| **Científica** | 9 | FBDS (Uso do Solo 5 m, APP, Hidrografia, Nascentes), Altimetria SRTM/Terrarium |
+| **Colaborativa** | 15 | OpenStreetMap (Ruas complementares, Escolas, Praças, Pontos de Ônibus, Edificações, Trapiches) |
+| **Digitalização não oficial** | 4 | Plano Diretor LC nº 281/2019 (Zoneamento com parâmetros do Anexo 05, Macrozoneamento, Perímetro Urbano e Sistema Viário) |
 
 ---
 
-## Como Ativar o GitHub Pages
+## Grupos Temáticos (11)
 
-No repositório GitHub (`Settings → Pages → Build and deployment`), selecione **Source: Deploy from a branch**, escolha **`main`** e pasta **`/ (root)`**, e clique em **Save**. Em instantes o geoportal ficará disponível em:
-`https://eriksdhoffmann.github.io/Geoportal-Araquari/`
+1. **Cadastro e Estrutura Territorial (IBGE / INCRA / OSM)** — Limite municipal, 10 Bairros e 2 Distritos com população Censo 2022, 116 Setores Censitários, CNEFE 2022 (`23.304` endereços, `902` logradouros, `2.888` estabelecimentos), `317` imóveis rurais INCRA/SIGEF e edificações.
+2. **Planejamento Urbano, Plano Diretor e Indústria** — Zoneamento, Macrozoneamento, Perímetro Urbano e Sistema Viário da LC nº 281/2019 (digitalização não oficial com aviso explícito + PDFs oficiais) e polos industriais.
+3. **Meio Ambiente, Cobertura da Terra e FBDS** — Uso do Solo 5 m, APP FBDS, APP Hidrografia IMA-SC (`453`), Manguezais, Terras Indígenas Guarani Mbya (FUNAI), Área Prioritária MMA (`ZCM-122`) e Espécies Arbóreas SINFAT.
+4. **Licenciamento e Fiscalização Ambiental (IMA-SC)** — Licenciamento (`619` processos), Embargos, Autos de Infração e Termos.
+5. **Hidrografia e Recursos Hídricos (FBDS, IMA & SGB)** — Bacias hidrográficas, Rios Simples (`901`), Rios Duplos, Massas d'Água, `177` Nascentes, `25` Poços SIAGAS e `103` Ilhas (SIGSC).
+6. **Defesa Civil e Riscos Hidrológicos (SGB / CPRM)** — `12` setores de risco alto a inundação, divisa sul de suscetibilidade e isolinha de cota 5 m.
+7. **Geologia, Geomorfologia, Solos e Altimetria** — Declividade IMA-SC (`5` classes), Geologia, Geomorfologia, Solos (IBGE BDIA), Domínios Hidrogeológicos e Curvas de Nível.
+8. **Sistema Viário, Rodovias, Ferrovia e Mobilidade** — DNIT SNV `202610A` (BR-101/BR-280), DNIT OAE (`7`), IBGE BC25-SC (rodovias, ferrovia, pontes), malha viária municipal e paradas de ônibus.
+9. **Equipamentos Públicos, Saúde, Educação e Lazer** — `20` estabelecimentos ativos DataSUS/CNES, edificações de ensino IBGE BC25-SC (`4`) + escolas OSM (`20`), equipamentos públicos e praças.
+10. **Energia, Dutos, Saneamento e Apoio Náutico** — ANEEL SIGEL (LT `138 kV`, Subestação `ARAQ.HYOSUNG`, Concessão `CELESC-DIS`), IBGE BC25-SC (Oleoduto OPASC, LT `230 kV`, `87` torres), reservatórios de água e trapiches náuticos.
+11. **Socioeconômico (Censo IBGE 2022) e Patrimônio Cultural (IPHAN)** — Densidade demográfica (`45.283` hab.), Saneamento domiciliar (água, esgoto, lixo), FCU oficial `Horto Flor de Liz`, indicadores SIDRA (`PIB 2023 R$ 9,90 bi`) e `4` sítios arqueológicos IPHAN/CNSA.
+
+---
+
+## Documentação Técnica (`docs/`)
+
+- [Catálogo de Dados (`docs/catalogo_dados.md`)](docs/catalogo_dados.md)
+- [Registro Completo de Metadados — 21 Campos (`docs/metadados.md`)](docs/metadados.md)
+- [Fontes de Dados e Serviços (`docs/fontes_dados.md`)](docs/fontes_dados.md)
+- [Matriz de Lacunas Floripa × Araquari e Ofícios (`docs/lacunas_informacionais.md`)](docs/lacunas_informacionais.md)
+- [Arquitetura Geoespacial e Fluxo QGIS (`docs/arquitetura_geoespacial.md`)](docs/arquitetura_geoespacial.md)
+- [Relatório de Auditoria Final (`docs/relatorio_auditoria_final.md`)](docs/relatorio_auditoria_final.md)
