@@ -149,6 +149,39 @@ window.GeoCatalog = (() => {
     'Rodovia (Desconhecida)': '#64748b',
   };
 
+  const ZONEAMENTO_COLORS = {
+    ZIC: '#dd6e8c',
+    'ZDU I': '#ffff9f',
+    'ZDU II': '#ffff00',
+    'ZDU III': '#ff7f00',
+    'ZDU IV': '#ff0000',
+    'ZDU V': '#b95ab9',
+    ZIT: '#b9715a',
+    ZPIND: '#bababa',
+    ZPIA: '#535353',
+    ZPQ: '#5ab900',
+    ZUC: '#703946',
+    CIND: '#cf24b6',
+    CURB: '#ffbf7f',
+    CSER: '#e11d48',
+    ZRUS: '#9fff7f',
+    ZREU: '#49965c',
+    ZRIEA: '#00b98c',
+    ZRPM: '#a3a300',
+  };
+
+  const PD_MACRO_COLORS = {
+    'Macrozona Urbana': '#ff7f00',
+    'Macrozona Rural': '#9fff7f',
+  };
+
+  const PD_VIARIO_COLORS = {
+    'Via Estrutural (BR-101 / BR-280 / SC-415)': '#dc2626',
+    'Via Arterial Primária': '#9333ea',
+    'Via Arterial Secundária': '#ec4899',
+    'Via Coletora': '#f97316',
+  };
+
   // Mapas Base, Satélite HD e Série Histórica / Relevo Oficial SC (SIGSC)
   const BASEMAPS = [
     {
@@ -470,22 +503,80 @@ window.GeoCatalog = (() => {
     },
     {
       id: 'planejamento_urbano',
-      name: 'Planejamento Urbano, Perímetro e Indústria',
+      name: 'Planejamento Urbano, Plano Diretor e Indústria',
       expanded: false,
-      description: 'Área Urbana Censitária (IBGE 2022) e manchas colaborativas de uso industrial/residencial (Plano Diretor entrará na Fase 4).',
+      description: 'Zoneamento (18 zonas), Macrozoneamento, Perímetro Urbano e Hierarquia Viária digitalizados dos Anexos da LC nº 281/2019, Área Urbana IBGE e polos industriais.',
       layers: [
+        {
+          id: 'pd_zoneamento_lc281',
+          name: 'Zoneamento Urbano e Rural — LC nº 281/2019 (Digit. não oficial)',
+          bundleKey: 'pd_zoneamento_lc281',
+          localFile: 'data/pd_zoneamento_lc281.geojson',
+          officialUrl: 'https://araquari.atende.net/cidadao/pagina/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&file=B9C377B83890FB82DF0F864D7342106670E53EEF&sistema=WPO&classe=UploadMidia',
+          geomType: 'polygon',
+          opacity: 0.56,
+          colorField: 'zona',
+          colorMap: ZONEAMENTO_COLORS,
+          labelField: 'zona',
+          titleField: 'nome_zona',
+          subtitleFields: ['zona', 'taxa_ocupacao', 'cal_basico', 'cal_maximo', 'gabarito_pavimentos', 'lote_area_minima', 'lote_testada_minima', 'taxa_permeabilidade', 'recuo_frontal', 'usos_admitidos', 'aviso_origem', 'fonte'],
+          description: 'Digitalização não oficial a partir dos Anexos 03 e 05 da LC nº 281/2019 com índices urbanísticos (TO, CAL, gabarito e lote mínimo).',
+        },
+        {
+          id: 'pd_macrozoneamento_lc281',
+          name: 'Macrozoneamento Municipal — LC nº 281/2019 (Digit. não oficial)',
+          bundleKey: 'pd_macrozoneamento_lc281',
+          localFile: 'data/pd_macrozoneamento_lc281.geojson',
+          officialUrl: 'https://araquari.atende.net/cidadao/pagina/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&file=068579778A02443BBDFFF1CD48AB20BFF4B7C208&sistema=WPO&classe=UploadMidia',
+          geomType: 'polygon',
+          opacity: 0.42,
+          colorField: 'macrozona',
+          colorMap: PD_MACRO_COLORS,
+          titleField: 'macrozona',
+          subtitleFields: ['area_km2', 'legislacao', 'aviso_origem', 'fonte'],
+          description: 'Digitalização não oficial a partir do Anexo 02 da LC nº 281/2019 (Macrozona Urbana e Macrozona Rural).',
+        },
+        {
+          id: 'pd_perimetro_urbano_lc281',
+          name: 'Perímetro Urbano Legal — LC nº 281/2019 (Digit. não oficial)',
+          bundleKey: 'pd_perimetro_urbano_lc281',
+          localFile: 'data/pd_perimetro_urbano_lc281.geojson',
+          officialUrl: 'https://araquari.atende.net/cidadao/pagina/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&file=5CB74941067F017D7E27AEBB920C26D99F8377FF&sistema=WPO&classe=UploadMidia',
+          geomType: 'polygon',
+          opacity: 0.9,
+          outlineMode: true,
+          style: { color: '#7c2d12', weight: 2.8, fillColor: '#fdba74', fillOpacity: 0.08 },
+          titleField: 'nome',
+          subtitleFields: ['area_km2', 'legislacao', 'aviso_origem', 'fonte'],
+          description: 'Digitalização não oficial a partir do Anexo 09 da LC nº 281/2019 (consolidação 2020).',
+        },
+        {
+          id: 'pd_sistema_viario_lc281',
+          name: 'Hierarquia Viária Plano Diretor — LC nº 281/2019 (Digit. não oficial)',
+          bundleKey: 'pd_sistema_viario_lc281',
+          localFile: 'data/pd_sistema_viario_lc281.geojson',
+          officialUrl: 'https://araquari.atende.net/cidadao/pagina/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&file=472ED082E37BB9E1B81FEBFC82FE22EA2E033436&sistema=WPO&classe=UploadMidia',
+          geomType: 'line',
+          opacity: 0.9,
+          colorField: 'hierarquia',
+          colorMap: PD_VIARIO_COLORS,
+          style: { color: '#9333ea', weight: 2.8 },
+          titleField: 'hierarquia',
+          subtitleFields: ['legislacao', 'aviso_origem', 'fonte'],
+          description: 'Digitalização não oficial a partir do Anexo 12 da LC nº 281/2019 (Estruturais, Arteriais Primárias/Secundárias e Coletoras).',
+        },
         {
           id: 'perimetro_urbano_ibge',
           name: 'Área Urbana Censitária (IBGE 2022 — derivada dos setores)',
           bundleKey: 'perimetro_urbano_ibge',
           localFile: 'data/perimetro_urbano_ibge.geojson',
           geomType: 'polygon',
-          opacity: 0.9,
+          opacity: 0.88,
           outlineMode: true,
-          style: { color: '#dc2626', weight: 2.6, dashArray: '8 5', fillColor: '#ef4444', fillOpacity: 0.06 },
+          style: { color: '#dc2626', weight: 2.2, dashArray: '8 5', fillColor: '#ef4444', fillOpacity: 0.04 },
           titleField: 'nome',
           subtitleFields: ['area_km2', 'setores_urbanos', 'fonte'],
-          description: 'União dos 79 setores censitários urbanos do IBGE 2022 (referência estatística; o Perímetro Urbano legal da LC 281/2019 será tratado na Fase 4).',
+          description: 'União dos 79 setores censitários urbanos do IBGE 2022 (referência estatística; compare com o Perímetro Urbano Legal Anexo 09).',
         },
         {
           id: 'areas_industriais_araquari',
@@ -1216,6 +1307,16 @@ window.GeoCatalog = (() => {
       center: [-26.392, -48.745],
       zoom: 13,
       color: '#7c3aed',
+    },
+    {
+      id: 'plano_diretor',
+      title: 'Plano Diretor — Zoneamento e Índices (LC nº 281/2019)',
+      desc: 'Zoneamento (18 zonas com TO/CAL/Gabarito), Perímetro Urbano Legal e Hierarquia Viária (Digitalização não oficial).',
+      basemap: 'satelite_hibrido',
+      layers: ['limite_municipal_ibge', 'pd_zoneamento_lc281', 'pd_perimetro_urbano_lc281', 'pd_sistema_viario_lc281'],
+      center: [-26.395, -48.735],
+      zoom: 12,
+      color: '#d97706',
     },
   ];
 

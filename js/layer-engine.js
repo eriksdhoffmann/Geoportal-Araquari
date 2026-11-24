@@ -214,6 +214,23 @@ window.GeoLayerEngine = (() => {
     situacaofisica: 'Situação Física',
     material: 'Material Construtivo',
     modal: 'Modal de Uso',
+    // Plano Diretor LC nº 281/2019 (Anexos 02, 03, 05, 09, 12)
+    macrozona: 'Macrozona (LC 281/2019)',
+    zona: 'Sigla do Zoneamento',
+    nome_zona: 'Denominação da Zona',
+    categoria_macro: 'Enquadramento Territorial',
+    taxa_ocupacao: 'Taxa de Ocupação (TO)',
+    cal_basico: 'CAL Básico',
+    cal_maximo: 'CAL Máximo',
+    gabarito_pavimentos: 'Gabarito Máximo (pav.)',
+    lote_area_minima: 'Área Mínima do Lote',
+    lote_testada_minima: 'Testada Mínima',
+    taxa_permeabilidade: 'Taxa de Permeabilidade',
+    recuo_frontal: 'Recuo Frontal Mínimo',
+    usos_admitidos: 'Usos Admitidos (Anexo 05)',
+    legislacao: 'Base Legal',
+    aviso_origem: 'Aviso de Procedência',
+    iou_ajuste_limite: 'Índice IoU de Ajuste ao Limite',
   };
 
   function prettyFieldName(key) {
@@ -1276,6 +1293,8 @@ window.GeoLayerEngine = (() => {
       const coreContextIds = [
         'bairros_araquari',
         'distritos_araquari',
+        'pd_zoneamento_lc281',
+        'pd_macrozoneamento_lc281',
         'ibge_setores_censitarios_2022',
         'incra_sigef_araquari',
         'sgb_setores_risco',
@@ -1309,14 +1328,16 @@ window.GeoLayerEngine = (() => {
       const priority = {
         bairros_araquari: 1,
         distritos_araquari: 2,
-        ibge_setores_censitarios_2022: 3,
-        sgb_setores_risco: 4,
-        fbds_uso_solo: 5,
-        fbds_app: 6,
-        ima_bacias_hidrograficas: 7,
-        funai_terras_indigenas: 8,
-        ibge_geologia: 9,
-        ibge_pedologia_solos: 10,
+        pd_zoneamento_lc281: 3,
+        pd_macrozoneamento_lc281: 4,
+        ibge_setores_censitarios_2022: 5,
+        sgb_setores_risco: 6,
+        fbds_uso_solo: 7,
+        fbds_app: 8,
+        ima_bacias_hidrograficas: 9,
+        funai_terras_indigenas: 10,
+        ibge_geologia: 11,
+        ibge_pedologia_solos: 12,
       };
       results.sort((a, b) => (priority[a.layerId] || 50) - (priority[b.layerId] || 50));
       return results;

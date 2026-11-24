@@ -1272,10 +1272,16 @@
           </div>
           <div class="gp-preset-card">
             <div>
-              <div class="gp-preset-title">Plano Diretor — Lei Complementar nº 281/2019</div>
-              <div class="gp-preset-desc">Consulte o texto integral do Plano Diretor Participativo, parâmetros urbanísticos, zoneamento (ZI, ZDU, ZR) e perímetro urbano.</div>
+              <div class="gp-preset-title">Plano Diretor — LC nº 281/2019 e Anexos Oficiais (PDF)</div>
+              <div class="gp-preset-desc">Consulte a Lei Complementar nº 281/2019, Anexo 02 (Macrozoneamento), Anexo 03 (Zoneamento), Anexo 05 (Tabela de Índices e Usos), Anexo 09 (Perímetro Urbano) e Anexo 12 (Sistema Viário).</div>
             </div>
-            <a class="gp-btn" href="https://leismunicipais.com.br/plano-diretor-araquari-sc" target="_blank" rel="noopener">Consultar Legislação ↗</a>
+            <div class="gp-btn-row" style="flex-wrap:wrap;gap:6px">
+              <a class="gp-btn primary" href="https://araquari.atende.net/cidadao/pagina/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&file=F8E4486C5174737DA97E56D843C9776F3DB60B19&sistema=WPO&classe=UploadMidia" target="_blank" rel="noopener">LC 281/2019 PDF ↗</a>
+              <a class="gp-btn" href="https://araquari.atende.net/cidadao/pagina/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&file=B9C377B83890FB82DF0F864D7342106670E53EEF&sistema=WPO&classe=UploadMidia" target="_blank" rel="noopener">Anexo 03 Zoneamento ↗</a>
+              <a class="gp-btn" href="https://araquari.atende.net/cidadao/pagina/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&file=9F07FC54AA7F3BEA4397EA634C6F651AC3BCD697&sistema=WPO&classe=UploadMidia" target="_blank" rel="noopener">Anexo 05 Índices ↗</a>
+              <a class="gp-btn" href="https://araquari.atende.net/cidadao/pagina/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&file=5CB74941067F017D7E27AEBB920C26D99F8377FF&sistema=WPO&classe=UploadMidia" target="_blank" rel="noopener">Anexo 09 Perímetro ↗</a>
+              <a class="gp-btn" href="https://leismunicipais.com.br/plano-diretor-araquari-sc" target="_blank" rel="noopener">LeisMunicipais ↗</a>
+            </div>
           </div>
           <div class="gp-preset-card">
             <div>
