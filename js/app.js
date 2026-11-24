@@ -1391,7 +1391,7 @@
       </div>
       <div class="gp-btn-row" style="margin-bottom:12px">
         ${canExport ? `<a class="gp-btn primary" href="${escapeHtml(cfg.localFile)}" download>Baixar GeoJSON ↓</a>` : '<span class="gp-src-pill src-cientifica">Apenas visualização / serviço</span>'}
-        <a class="gp-btn" href="downloads.html?q=${encodeURIComponent(meta.nome_camada)}" target="_blank" rel="noopener">Abrir na Central de Downloads ↗</a>
+        <a class="gp-btn" href="downloads.html?q=${encodeURIComponent(meta.nome_camada)}" target="_blank" rel="opener">Abrir na Central de Downloads ↗</a>
         ${cfg.localFile ? `<button class="gp-btn" id="btnMetaActivateOnMap">Ativar no Mapa</button>` : ''}
       </div>
       <table class="gp-meta-table">${rowsHtml}</table>
@@ -1434,6 +1434,49 @@
       else if (activeFloatingPanel) closeFloatingPanel();
     }
   });
+
+  window.GeoPortalMapNav = {
+    focusMap() {
+      closeModal();
+      try {
+        window.focus();
+      } catch {
+        // ignore
+      }
+    },
+    activateLayer(layerId) {
+      closeModal();
+      setDrawerOpen(true);
+      if (drawerTab !== 'layers') drawerTab = 'layers';
+      const found = window.GeoCatalog.getLayerById(layerId);
+      if (found) expandedGroups.add(found.group.id);
+      renderLayerDrawer();
+      const promise = engine.enableLayer(layerId).then(() => {
+        engine.zoomToLayer(layerId);
+        renderLayerDrawer();
+      });
+      if (found) showToast(`Camada "${found.layer.name}" ativada no mapa!`, 'success');
+      try {
+        window.focus();
+      } catch {
+        // ignore
+      }
+      return promise;
+    },
+    activateBasemap(basemapId) {
+      closeModal();
+      setDrawerOpen(true);
+      tools.disableSwipe();
+      engine.setBasemapActive(basemapId, true, true);
+      renderLayerDrawer();
+      showToast('Base aérea / relevo oficial ativada no mapa!', 'success');
+      try {
+        window.focus();
+      } catch {
+        // ignore
+      }
+    },
+  };
 
   renderLayerDrawer();
 })();

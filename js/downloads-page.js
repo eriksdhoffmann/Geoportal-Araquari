@@ -279,9 +279,9 @@
         const badge = Meta.getSourceBadgeMeta(it.sourceClass);
         const actions = [];
         if (it.kind === 'layer') {
-          actions.push(`<a class="gp-btn primary" href="index.html?layer=${encodeURIComponent(it.id)}" target="_blank" rel="noopener">Ver no Mapa ↗</a>`);
+          actions.push(`<a class="gp-btn primary" href="index.html?layer=${encodeURIComponent(it.id)}" data-open-map-layer="${esc(it.id)}">Ver no Mapa ↗</a>`);
         } else if (it.kind === 'basemap') {
-          actions.push(`<a class="gp-btn primary" href="index.html?basemap=${encodeURIComponent(it.id)}" target="_blank" rel="noopener">Abrir Base ↗</a>`);
+          actions.push(`<a class="gp-btn primary" href="index.html?basemap=${encodeURIComponent(it.id)}" data-open-map-basemap="${esc(it.id)}">Abrir Base ↗</a>`);
         }
         actions.push(`<button class="gp-btn" data-dl-meta="${esc(it.id)}">ⓘ Metadados</button>`);
         if (it.redistributable && it.cfg.localFile) {
@@ -434,7 +434,63 @@
     renderSidebar();
     renderResults();
   });
+  function getAvailableMapOpener() {
+    try {
+      if (window.opener && !window.opener.closed && window.opener.GeoPortalMapNav) {
+        return window.opener;
+      }
+    } catch {
+      // Cross-origin ou opener indisponível
+    }
+    return null;
+  }
+
+  function handleReturnToMapClick(e, { layerId = '', basemapId = '' } = {}) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+      return;
+    }
+    const opener = getAvailableMapOpener();
+    if (!opener) {
+      // Sem aba original disponível: navega na aba atual pelo href do link
+      return;
+    }
+    e.preventDefault();
+    try {
+      if (layerId) opener.GeoPortalMapNav.activateLayer(layerId);
+      else if (basemapId) opener.GeoPortalMapNav.activateBasemap(basemapId);
+      else opener.GeoPortalMapNav.focusMap();
+    } catch {
+      const link = e.target.closest('a[href]');
+      if (link) window.location.href = link.href;
+      return;
+    }
+    try {
+      opener.focus();
+    } catch {
+      // ignore
+    }
+    try {
+      window.close();
+    } catch {
+      // ignore
+    }
+  }
+
+  document.querySelectorAll('[data-return-to-map]').forEach((el) => {
+    el.addEventListener('click', (e) => handleReturnToMapClick(e));
+  });
+
   document.getElementById('dlResults').addEventListener('click', (e) => {
+    const mapLayerLink = e.target.closest('[data-open-map-layer]');
+    if (mapLayerLink) {
+      handleReturnToMapClick(e, { layerId: mapLayerLink.dataset.openMapLayer });
+      return;
+    }
+    const mapBmLink = e.target.closest('[data-open-map-basemap]');
+    if (mapBmLink) {
+      handleReturnToMapClick(e, { basemapId: mapBmLink.dataset.openMapBasemap });
+      return;
+    }
     const mb = e.target.closest('[data-dl-meta]');
     if (mb) {
       openDlMetadataModal(mb.dataset.dlMeta);
