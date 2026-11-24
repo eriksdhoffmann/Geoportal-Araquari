@@ -685,6 +685,8 @@ window.GeoTools = (() => {
         { key: 'aneel_subestacoes', type: 'Subestação Elétrica (ANEEL)', badge: 'ANEEL', layer: 'aneel_subestacoes', sub: (p) => p.agente || 'CELESC / ANEEL' },
         { key: 'aneel_transmissao_linhas', type: 'Linha de Transmissão (ANEEL)', badge: 'ANEEL', layer: 'aneel_transmissao_linhas', sub: (p) => `${p.tensao || '138 kV'} • ${p.extensao_araquari_km || '-'} km em Araquari` },
         { key: 'ibge_bc25_dutos', type: 'Duto / Oleoduto (IBGE BC25)', badge: 'Duto', layer: 'ibge_bc25_dutos', sub: (p) => `${p.tipo || 'Duto'} • ${p.extensao_km || '-'} km em Araquari` },
+        { key: 'iphan_sitios_arqueologicos', type: 'Sítio Arqueológico (IPHAN)', badge: 'IPHAN', layer: 'iphan_sitios_arqueologicos', sub: (p) => `${p.cnsa || ''} • ${p.classificacao || 'Pré-colonial'}` },
+        { key: 'ibge_favelas_comunidades_urbanas_2022', type: 'Comunidade Urbana (IBGE FCU)', badge: 'IBGE', layer: 'ibge_favelas_comunidades_urbanas_2022', sub: (p) => `${p.populacao_2022 || '-'} hab. • ${p.domicilios_2022 || '-'} domicílios` },
       ];
       for (const src of poiSources) {
         for (const f of bundle[src.key]?.features || []) {

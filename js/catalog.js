@@ -195,6 +195,22 @@ window.GeoCatalog = (() => {
     'Suscetibilidade Média a Inundação': '#f59e0b',
   };
 
+  const CENSO_DENSIDADE_COLORS = {
+    'Muito Baixa (< 10 hab/km²)': '#fef9c3',
+    'Baixa (10 a 100 hab/km²)': '#fde047',
+    'Média (100 a 500 hab/km²)': '#fb923c',
+    'Alta (500 a 2.000 hab/km²)': '#ea580c',
+    'Muito Alta (> 2.000 hab/km²)': '#991b1b',
+  };
+
+  const CENSO_AGUA_COLORS = {
+    '≥ 90% Rede Geral de Água': '#0284c7',
+    '70% a 89% Rede Geral': '#38bdf8',
+    '40% a 69% Rede Geral': '#facc15',
+    '< 40% Rede Geral (Poço/Outro)': '#ef4444',
+    'Sem dados / Não habitado': '#cbd5e1',
+  };
+
   // Mapas Base, Satélite HD e Série Histórica / Relevo Oficial SC (SIGSC)
   const BASEMAPS = [
     {
@@ -388,8 +404,8 @@ window.GeoCatalog = (() => {
           style: { color: '#ffffff', weight: 1.9, dashArray: '5 3', fillColor: '#0ea5e9', fillOpacity: 0.03 },
           labelField: 'nome',
           titleField: 'nome',
-          subtitleFields: ['area_km2', 'fonte'],
-          description: 'Divisão de bairros segundo o Censo Demográfico IBGE 2022 (Centro, Itinga, Porto Grande, Corveta, Rainha, Areias Pequenas, Volta Redonda, Colégio Agrícola, Itapocu e Barra do Itapocu).',
+          subtitleFields: ['populacao_2022', 'domicilios_2022', 'domicilios_ocupados_2022', 'domicilios_ocasionais_2022', 'area_km2', 'setores_censitarios', 'fonte'],
+          description: 'Divisão de bairros segundo o Censo Demográfico IBGE 2022 com população e domicílios agregados (Centro, Itinga, Porto Grande, Corveta, Rainha, Areias Pequenas, Volta Redonda, Colégio Agrícola, Itapocu e Barra do Itapocu).',
         },
         {
           id: 'distritos_araquari',
@@ -402,8 +418,8 @@ window.GeoCatalog = (() => {
           style: { color: '#f59e0b', weight: 2.6, dashArray: '10 5', fillColor: '#fbbf24', fillOpacity: 0.04 },
           labelField: 'nome',
           titleField: 'nome',
-          subtitleFields: ['area_km2', 'fonte'],
-          description: 'Divisão distrital oficial do Município de Araquari: Distrito Sede (Araquari) e Distrito de Itapocu.',
+          subtitleFields: ['populacao_2022', 'domicilios_2022', 'domicilios_ocupados_2022', 'area_km2', 'setores_censitarios', 'fonte'],
+          description: 'Divisão distrital oficial do Município de Araquari com população Censo 2022: Distrito Sede (42.331 hab.) e Distrito de Itapocu (2.952 hab.).',
         },
         {
           id: 'ibge_setores_censitarios_2022',
@@ -415,8 +431,8 @@ window.GeoCatalog = (() => {
           colorField: 'situacao',
           colorMap: SETOR_SIT_COLORS,
           titleField: 'cd_setor',
-          subtitleFields: ['situacao', 'bairro', 'distrito', 'area_km2', 'fonte'],
-          description: 'Malha oficial dos 116 setores censitários do Censo IBGE 2022 em Araquari (79 setores urbanos e 37 setores rurais).',
+          subtitleFields: ['situacao', 'bairro_ibge', 'distrito', 'populacao_2022', 'domicilios_2022', 'densidade_hab_km2', 'taxa_alfabetizacao_pct', 'agua_rede_geral_pct', 'esgoto_adequado_pct', 'coleta_lixo_pct', 'area_km2', 'fonte'],
+          description: 'Malha oficial dos 116 setores censitários do Censo IBGE 2022 em Araquari (45.283 habitantes, 18.565 domicílios, alfabetização e saneamento domiciliar).',
         },
         {
           id: 'cnefe_logradouros_araquari',
@@ -1368,6 +1384,64 @@ window.GeoCatalog = (() => {
         },
       ],
     },
+    {
+      id: 'socioeconomico_patrimonio',
+      name: 'Socioeconômico (Censo IBGE 2022) e Patrimônio Cultural (IPHAN)',
+      expanded: false,
+      description: 'Mapa coroplético de densidade demográfica e alfabetização (45.283 hab.), saneamento domiciliar (água, esgoto e lixo), Favela e Comunidade Urbana oficial (Horto Flor de Liz) e Sítios Arqueológicos IPHAN.',
+      layers: [
+        {
+          id: 'ibge_densidade_demografica_2022',
+          name: 'Densidade Demográfica e População (Censo IBGE 2022)',
+          bundleKey: 'ibge_densidade_demografica_2022',
+          localFile: 'data/ibge_densidade_demografica_2022.geojson',
+          geomType: 'polygon',
+          opacity: 0.62,
+          colorField: 'classe_densidade',
+          colorMap: CENSO_DENSIDADE_COLORS,
+          titleField: 'nome',
+          subtitleFields: ['classe_densidade', 'populacao_2022', 'domicilios_ocupados_2022', 'densidade_hab_km2', 'taxa_alfabetizacao_pct', 'bairro_ibge', 'area_km2', 'fonte'],
+          description: 'Distribuição espacial da população e densidade demográfica (hab/km²) por setor censitário em Araquari no Censo IBGE 2022 (total: 45.283 habitantes).',
+        },
+        {
+          id: 'ibge_saneamento_domicilios_2022',
+          name: 'Saneamento Domiciliar — Água, Esgoto e Lixo (Censo IBGE 2022)',
+          bundleKey: 'ibge_saneamento_domicilios_2022',
+          localFile: 'data/ibge_saneamento_domicilios_2022.geojson',
+          geomType: 'polygon',
+          opacity: 0.62,
+          colorField: 'classe_agua',
+          colorMap: CENSO_AGUA_COLORS,
+          titleField: 'nome',
+          subtitleFields: ['classe_agua', 'agua_rede_geral_pct', 'esgoto_adequado_pct', 'coleta_lixo_pct', 'domicilios_ocupados_2022', 'bairro_ibge', 'fonte'],
+          description: 'Percentual de domicílios particulares ocupados atendidos por rede geral de água, esgotamento adequado (rede/fossa séptica) e coleta de lixo segundo o Censo IBGE 2022.',
+        },
+        {
+          id: 'ibge_favelas_comunidades_urbanas_2022',
+          name: 'Favelas e Comunidades Urbanas — Horto Flor de Liz (IBGE 2022 — 1)',
+          bundleKey: 'ibge_favelas_comunidades_urbanas_2022',
+          localFile: 'data/ibge_favelas_comunidades_urbanas_2022.geojson',
+          geomType: 'polygon',
+          opacity: 0.72,
+          style: { color: '#991b1b', weight: 2.5, fillColor: '#ef4444', fillOpacity: 0.35, dashArray: '5 3' },
+          titleField: 'nome',
+          subtitleFields: ['cd_fcu', 'cd_setor', 'populacao_2022', 'domicilios_2022', 'agua_rede_geral_pct', 'esgoto_adequado_pct', 'coleta_lixo_pct', 'fonte'],
+          description: 'Setor oficial de Favelas e Comunidades Urbanas (FCU) identificado pelo IBGE no Censo 2022 em Araquari (Horto Flor de Liz — CD_FCU 42013070001).',
+        },
+        {
+          id: 'iphan_sitios_arqueologicos',
+          name: 'Sítios Arqueológicos Cadastrados (IPHAN / CNSA — 4)',
+          bundleKey: 'iphan_sitios_arqueologicos',
+          localFile: 'data/iphan_sitios_arqueologicos.geojson',
+          geomType: 'point',
+          opacity: 1,
+          pointStyle: { radius: 7, color: '#ffffff', weight: 2, fillColor: '#9333ea', fillOpacity: 0.96 },
+          titleField: 'nome',
+          subtitleFields: ['cnsa', 'natureza', 'tipo', 'classificacao', 'data_cadastro', 'fonte'],
+          description: 'Sítios arqueológicos pré-coloniais oficialmente registrados no Cadastro Nacional de Sítios Arqueológicos (IPHAN/CNSA) dentro de Araquari.',
+        },
+      ],
+    },
   ];
 
   // Central de Downloads — Dados locais em GeoJSON + Fontes Oficiais Originais (FBDS, Prefeitura, IBGE, IMA, SGB)
@@ -1502,6 +1576,16 @@ window.GeoCatalog = (() => {
       center: [-26.395, -48.735],
       zoom: 12,
       color: '#d97706',
+    },
+    {
+      id: 'socioeconomico_censo',
+      title: 'Censo IBGE 2022 — População, Saneamento e IPHAN',
+      desc: 'Densidade demográfica (45.283 hab.), Saneamento domiciliar, FCU Horto Flor de Liz e 4 sítios arqueológicos IPHAN.',
+      basemap: 'carto_light',
+      layers: ['limite_municipal_ibge', 'ibge_densidade_demografica_2022', 'ibge_favelas_comunidades_urbanas_2022', 'iphan_sitios_arqueologicos', 'bairros_araquari'],
+      center: [-26.415, -48.745],
+      zoom: 12,
+      color: '#9333ea',
     },
   ];
 

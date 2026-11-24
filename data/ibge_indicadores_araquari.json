@@ -1,0 +1,284 @@
+{
+  "municipio": "Araquari",
+  "uf": "SC",
+  "codigo_ibge": "4201307",
+  "indicadores": {
+    "populacao_censo_2022": [
+      {
+        "id": "93",
+        "variavel": "População residente",
+        "unidade": "Pessoas",
+        "resultados": [
+          {
+            "classificacoes": [
+              {
+                "id": "2",
+                "nome": "Sexo",
+                "categoria": {
+                  "6794": "Total"
+                }
+              },
+              {
+                "id": "286",
+                "nome": "Forma de declaração da idade",
+                "categoria": {
+                  "113635": "Total"
+                }
+              },
+              {
+                "id": "287",
+                "nome": "Idade",
+                "categoria": {
+                  "100362": "Total"
+                }
+              }
+            ],
+            "series": [
+              {
+                "localidade": {
+                  "id": "4201307",
+                  "nivel": {
+                    "id": "N6",
+                    "nome": "Município"
+                  },
+                  "nome": "Araquari (SC)"
+                },
+                "serie": {
+                  "2022": "45283"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "pib_municipal": [
+      {
+        "id": "37",
+        "variavel": "Produto Interno Bruto a preços correntes",
+        "unidade": "Mil Reais",
+        "resultados": [
+          {
+            "classificacoes": [],
+            "series": [
+              {
+                "localidade": {
+                  "id": "4201307",
+                  "nivel": {
+                    "id": "N6",
+                    "nome": "Município"
+                  },
+                  "nome": "Araquari (SC)"
+                },
+                "serie": {
+                  "2023": "9900040"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "513",
+        "variavel": "Valor adicionado bruto a preços correntes da agropecuária",
+        "unidade": "",
+        "resultados": [
+          {
+            "classificacoes": [],
+            "series": [
+              {
+                "localidade": {
+                  "id": "4201307",
+                  "nivel": {
+                    "id": "N6",
+                    "nome": "Município"
+                  },
+                  "nome": "Araquari (SC)"
+                },
+                "serie": {
+                  "2023": "..."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "517",
+        "variavel": "Valor adicionado bruto a preços correntes da indústria",
+        "unidade": "",
+        "resultados": [
+          {
+            "classificacoes": [],
+            "series": [
+              {
+                "localidade": {
+                  "id": "4201307",
+                  "nivel": {
+                    "id": "N6",
+                    "nome": "Município"
+                  },
+                  "nome": "Araquari (SC)"
+                },
+                "serie": {
+                  "2023": "..."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "525",
+        "variavel": "Valor adicionado bruto a preços correntes da administração, defesa, educação e saúde públicas e seguridade social",
+        "unidade": "",
+        "resultados": [
+          {
+            "classificacoes": [],
+            "series": [
+              {
+                "localidade": {
+                  "id": "4201307",
+                  "nivel": {
+                    "id": "N6",
+                    "nome": "Município"
+                  },
+                  "nome": "Araquari (SC)"
+                },
+                "serie": {
+                  "2023": "..."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "6575",
+        "variavel": "Valor adicionado bruto a preços correntes dos serviços, exclusive administração, defesa, educação e saúde públicas e seguridade social",
+        "unidade": "",
+        "resultados": [
+          {
+            "classificacoes": [],
+            "series": [
+              {
+                "localidade": {
+                  "id": "4201307",
+                  "nivel": {
+                    "id": "N6",
+                    "nome": "Município"
+                  },
+                  "nome": "Araquari (SC)"
+                },
+                "serie": {
+                  "2023": "..."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "pam_lavouras_permanentes_temporarias": [
+      {
+        "id": "214",
+        "variavel": "Quantidade produzida",
+        "unidade": "Toneladas",
+        "resultados": [
+          {
+            "classificacoes": [
+              {
+                "id": "782",
+                "nome": "Produto das lavouras temporárias e permanentes",
+                "categoria": {
+                  "0": "Total"
+                }
+              }
+            ],
+            "series": [
+              {
+                "localidade": {
+                  "id": "4201307",
+                  "nivel": {
+                    "id": "N6",
+                    "nome": "Município"
+                  },
+                  "nome": "Araquari (SC)"
+                },
+                "serie": {
+                  "2025": ".."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "215",
+        "variavel": "Valor da produção",
+        "unidade": "Mil Reais",
+        "resultados": [
+          {
+            "classificacoes": [
+              {
+                "id": "782",
+                "nome": "Produto das lavouras temporárias e permanentes",
+                "categoria": {
+                  "0": "Total"
+                }
+              }
+            ],
+            "series": [
+              {
+                "localidade": {
+                  "id": "4201307",
+                  "nivel": {
+                    "id": "N6",
+                    "nome": "Município"
+                  },
+                  "nome": "Araquari (SC)"
+                },
+                "serie": {
+                  "2025": "54270"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "8331",
+        "variavel": "Área plantada ou destinada à colheita",
+        "unidade": "Hectares",
+        "resultados": [
+          {
+            "classificacoes": [
+              {
+                "id": "782",
+                "nome": "Produto das lavouras temporárias e permanentes",
+                "categoria": {
+                  "0": "Total"
+                }
+              }
+            ],
+            "series": [
+              {
+                "localidade": {
+                  "id": "4201307",
+                  "nivel": {
+                    "id": "N6",
+                    "nome": "Município"
+                  },
+                  "nome": "Araquari (SC)"
+                },
+                "serie": {
+                  "2025": "2913"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
