@@ -457,6 +457,35 @@ window.GeoMetadata = (() => {
       observacoes_qualidade: 'Base técnica referencial segundo o Código Florestal (não dispensa vistoria topográfica no lote). Contém 5 geometrias para reparo na Fase 3.',
     }),
 
+    ima_app_hidrografia: makeMeta({
+      sourceClass: 'Oficial',
+      whatIsThis: 'Polígonos oficiais das faixas de Área de Preservação Permanente (APP) ao redor de cursos d’água na base cartográfica hidrográfica do IMA-SC / Governo de Santa Catarina.',
+      nome_camada: 'APP Hidrográfica Oficial SC (IMA-SC / SDS — 453)',
+      categoria: 'Meio Ambiente, Cobertura da Terra e FBDS',
+      orgao_responsavel: 'IMA-SC / Secretaria de Estado do Desenvolvimento Sustentável',
+      instituicao_fornecedora: 'GeoServer IMA-SC (WFS Público)',
+      url_fonte_original: 'https://geo.ima.sc.gov.br/',
+      url_download_ou_servico: 'https://geo.ima.sc.gov.br/geoserver/ima/ows?service=WFS&typeName=ima:ima_hidrografia_app',
+      formato: 'WFS → GeoJSON (WGS 84)',
+      tipo_geometria: 'Polígono',
+      licenca_uso: 'Dados Abertos IMA-SC',
+    }),
+
+    mma_areas_prioritarias_biodiversidade: makeMeta({
+      sourceClass: 'Oficial',
+      whatIsThis: 'Áreas definidas oficialmente pelo Ministério do Meio Ambiente (MMA) como prioritárias para conservação da biodiversidade costeira e marinha em Araquari (trecho Costa Centro-Norte SC / Lagoa da Cruz).',
+      nome_camada: 'Áreas Prioritárias para Biodiversidade (MMA — Costa SC)',
+      categoria: 'Meio Ambiente, Cobertura da Terra e FBDS',
+      orgao_responsavel: 'MMA — Ministério do Meio Ambiente e Mudança do Clima',
+      instituicao_fornecedora: 'Portal Dados Abertos MMA',
+      url_fonte_original: 'https://dados.mma.gov.br/',
+      url_download_ou_servico: 'https://dados.mma.gov.br/dataset/f0dde837-8db0-4221-989f-45944c1f09ee/resource/1bd833e0-64b6-4090-a9a6-ca5e60a0b9c7/download/shape_zcm.zip',
+      formato: 'Shapefile (.zip) → GeoJSON (WGS 84)',
+      tipo_geometria: 'Polígono',
+      licenca_uso: 'Dados Abertos Governamentais (MMA)',
+      observacoes_qualidade: 'Nota: não há Unidades de Conservação federais/estaduais públicas com polígono publicado sobre Araquari nas bases pesquisadas (FUNAI Terras Indígenas e MMA ZCM cobrem as áreas protegidas encontradas).',
+    }),
+
     ibge_vegetacao: makeMeta({
       sourceClass: 'Oficial',
       whatIsThis: 'Grandes tipos de vegetação natural da Mata Atlântica em Araquari segundo o IBGE: florestas das planícies e morros, restingas arenosas e manguezais na Baía da Babitonga.',
@@ -572,6 +601,20 @@ window.GeoMetadata = (() => {
       url_download_ou_servico: 'https://geo.ima.sc.gov.br/geoserver/ima/wfs?typeName=ima:gaia_embargos',
       formato: 'WFS → GeoJSON',
       tipo_geometria: 'Polígono',
+      licenca_uso: 'Dados Públicos IMA-SC',
+    }),
+
+    ima_especies_arboreas_sinfat: makeMeta({
+      sourceClass: 'Oficial',
+      whatIsThis: 'Registro público no sistema Sinfat (IMA-SC) com as 6 ocorrências georreferenciadas de árvores nativas cadastradas em pedidos de Autorização de Corte (AuC) em Araquari.',
+      nome_camada: 'Ocorrências Arbóreas — Autorização de Corte (SINFAT — 6)',
+      categoria: 'Licenciamento e Fiscalização Ambiental (IMA-SC)',
+      orgao_responsavel: 'IMA-SC — Instituto do Meio Ambiente de Santa Catarina',
+      instituicao_fornecedora: 'GeoServer IMA-SC (Sinfat / VEG)',
+      url_fonte_original: 'https://geo.ima.sc.gov.br/',
+      url_download_ou_servico: 'https://geo.ima.sc.gov.br/geoserver/ima/ows?service=WFS&typeName=ima:sinfat_auc_arvores',
+      formato: 'WFS → GeoJSON (WGS 84)',
+      tipo_geometria: 'Ponto',
       licenca_uso: 'Dados Públicos IMA-SC',
     }),
 
@@ -732,7 +775,46 @@ window.GeoMetadata = (() => {
       status_validacao: 'DADO SUBSTITUTO DISPONÍVEL',
     }),
 
+    sgb_suscetibilidade_inundacao: makeMeta({
+      sourceClass: 'Oficial',
+      whatIsThis: 'Pequeno recorte da Carta Oficial de Suscetibilidade a Inundação da SGB/CPRM (originalmente mapeada para o município vizinho de Barra Velha) que adentra a divisa sul de Araquari (3,71 ha). Araquari ainda não dispõe de carta municipal completa publicada pela CPRM.',
+      classHelp: {
+        'Suscetibilidade Alta a Inundação': 'Áreas de planície aluvial baixa junto à calha sul sujeitas a alagamentos frequentes.',
+        'Suscetibilidade Média a Inundação': 'Zonas adjacentes com suscetibilidade moderada a eventos hidrológicos.',
+      },
+      nome_camada: 'Suscetibilidade a Inundação — Divisa Sul (SGB/CPRM — 3)',
+      categoria: 'Defesa Civil e Riscos Hidrológicos (SGB / CPRM)',
+      orgao_responsavel: 'SGB / CPRM — Serviço Geológico do Brasil',
+      instituicao_fornecedora: 'GeoPortal SGB / CPRM (gestaoterritorial/inundacao)',
+      url_fonte_original: 'https://geoportal.sgb.gov.br/',
+      url_download_ou_servico: 'https://geoportal.sgb.gov.br/server/rest/services/gestaoterritorial/inundacao/MapServer',
+      formato: 'ArcGIS REST → GeoJSON (WGS 84)',
+      tipo_geometria: 'Polígono',
+      licenca_uso: 'Dados Abertos SGB / CPRM',
+      observacoes_qualidade: 'Abrange somente 3,71 ha na divisa sul provenientes do mapeamento de Barra Velha (lacuna: carta completa de suscetibilidade do próprio município).',
+    }),
+
     // ================= 7. GEOLOGIA, GEOMORFOLOGIA, SOLOS E ALTIMETRIA =================
+    ima_declividade_araquari: makeMeta({
+      sourceClass: 'Oficial',
+      whatIsThis: 'Mostra a inclinação natural do terreno em 5 faixas oficiais do IMA-SC/SIGSC: de planícies muito planas (0–5%, 323 km²) até encostas íngremes acima de 45% (áreas críticas com restrição florestal e risco geotécnico).',
+      classHelp: {
+        '0–5% (Plano)': 'Várzeas, manguezais e planícies litorâneas de baixíssima inclinação (323,0 km² — 88% do município).',
+        '5–12% (Suave)': 'Colinas suaves e rampas de transição bem drenadas (32,18 km²).',
+        '12–25% (Ondulado)': 'Encostas moderadas que exigem controle de drenagem pluvial e terraplanagem (11,56 km²).',
+        '25–45% (Forte)': 'Morros acentuados sujeitos a erosão e restrição ao parcelamento urbano (0,92 km²).',
+        '>45% (Escarpado)': 'Escarpas muito íngremes / encostas críticas protegidas como APP pelo Código Florestal (0,05 km²).',
+      },
+      nome_camada: 'Declividade do Relevo — 5 Classes (IMA-SC / SIGSC)',
+      categoria: 'Geologia, Geomorfologia, Solos e Altimetria',
+      orgao_responsavel: 'IMA-SC / Governo de Santa Catarina (SIGSC)',
+      instituicao_fornecedora: 'GeoServer IMA-SC (WFS Público)',
+      url_fonte_original: 'https://geo.ima.sc.gov.br/',
+      url_download_ou_servico: 'https://geo.ima.sc.gov.br/geoserver/ima/ows?service=WFS&typeName=ima:declividade',
+      formato: 'WFS → GeoJSON (WGS 84)',
+      tipo_geometria: 'Polígono / Multipolígono',
+      licenca_uso: 'Dados Abertos IMA-SC / SIGSC',
+    }),
     ibge_geologia: makeMeta({
       sourceClass: 'Oficial',
       whatIsThis: 'Mostra os tipos de rocha e sedimentos que formam o subsolo de Araquari: áreas arenosas e argilosas recentes perto da costa e rios (aluviões e planície litorânea) e rochas cristalinas antigas nos morros e serras.',

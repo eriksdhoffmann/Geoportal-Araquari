@@ -182,6 +182,19 @@ window.GeoCatalog = (() => {
     'Via Coletora': '#f97316',
   };
 
+  const IMA_DECLIV_COLORS = {
+    '0–5% (Plano)': '#bef264',
+    '5–12% (Suave)': '#4ade80',
+    '12–25% (Ondulado)': '#facc15',
+    '25–45% (Forte)': '#f97316',
+    '>45% (Escarpado)': '#dc2626',
+  };
+
+  const SGB_INUND_COLORS = {
+    'Suscetibilidade Alta a Inundação': '#dc2626',
+    'Suscetibilidade Média a Inundação': '#f59e0b',
+  };
+
   // Mapas Base, Satélite HD e Série Histórica / Relevo Oficial SC (SIGSC)
   const BASEMAPS = [
     {
@@ -609,7 +622,7 @@ window.GeoCatalog = (() => {
       id: 'meio_ambiente_fbds',
       name: 'Meio Ambiente, Cobertura da Terra e FBDS',
       expanded: false,
-      description: 'Base oficial FBDS (SC_4201307: Uso do Solo e APPs), Vegetação IBGE, Fitogeográfico IMA, Áreas Úmidas e Terras Indígenas FUNAI.',
+      description: 'Base FBDS (Uso e 378 APPs), APP Oficial IMA-SC, Áreas Prioritárias MMA, Vegetação IBGE, Fitogeográfico IMA, Áreas Úmidas e Terras Indígenas FUNAI.',
       layers: [
         {
           id: 'fbds_uso_solo',
@@ -628,7 +641,7 @@ window.GeoCatalog = (() => {
         },
         {
           id: 'fbds_app',
-          name: 'Áreas de Preservação Permanente — APP (FBDS — 380)',
+          name: 'Áreas de Preservação Permanente — APP (FBDS — 378)',
           bundleKey: 'fbds_app',
           isExtraBundle: true,
           localFile: 'data/fbds_app.geojson',
@@ -638,8 +651,33 @@ window.GeoCatalog = (() => {
           colorField: 'HIDRO',
           colorMap: FBDS_APP_COLORS,
           titleField: 'HIDRO',
-          subtitleFields: ['APP_M', 'AREA_HA', 'MUNICIPIO'],
+          subtitleFields: ['APP_M', 'AREA_HA', 'MUNICIPIO', 'fonte'],
           description: 'Faixas de Áreas de Preservação Permanente (30m, 50m, 100m e 200m) ao longo de cursos d’água, massas d’água e nascentes (FBDS SC_4201307_APP.shp).',
+        },
+        {
+          id: 'ima_app_hidrografia',
+          name: 'APP Hidrográfica Oficial SC (IMA-SC / SDS — 453)',
+          bundleKey: 'ima_app_hidrografia',
+          isExtraBundle: true,
+          localFile: 'data/ima_app_hidrografia.geojson',
+          geomType: 'polygon',
+          opacity: 0.54,
+          style: { color: '#047857', weight: 1.4, fillColor: '#10b981', fillOpacity: 0.42 },
+          titleField: 'categoria',
+          subtitleFields: ['faixa_app', 'origem_lote', 'fonte'],
+          description: 'Polígonos oficiais de Áreas de Preservação Permanente (APP) ao longo da hidrografia na base estadual IMA-SC / SDS.',
+        },
+        {
+          id: 'mma_areas_prioritarias_biodiversidade',
+          name: 'Áreas Prioritárias para Biodiversidade (MMA — Costa SC)',
+          bundleKey: 'mma_areas_prioritarias_biodiversidade',
+          localFile: 'data/mma_areas_prioritarias_biodiversidade.geojson',
+          geomType: 'polygon',
+          opacity: 0.56,
+          style: { color: '#15803d', weight: 2.0, dashArray: '5 3', fillColor: '#22c55e', fillOpacity: 0.28 },
+          titleField: 'nome_area',
+          subtitleFields: ['codigo_area', 'bioma_recorte', 'importancia', 'prioridade_acao', 'acao_principal', 'area_ha', 'fonte'],
+          description: 'Polígono oficial do Ministério do Meio Ambiente (MMA) de área prioritária para conservação na Zona Costeira e Marinha em Araquari (Lagoa da Cruz / Litoral).',
         },
         {
           id: 'ibge_vegetacao',
@@ -739,6 +777,18 @@ window.GeoCatalog = (() => {
           titleField: 'infracao_categoria',
           subtitleFields: ['embargo_numero', 'processo_numero', 'infracao_data', 'infracao_descricao', 'esta_vigente', 'fonte'],
           description: 'Polígonos oficiais de áreas embargadas pela fiscalização ambiental estadual (GAIA / IMA-SC).',
+        },
+        {
+          id: 'ima_especies_arboreas_sinfat',
+          name: 'Ocorrências Arbóreas — Autorização de Corte (SINFAT — 6)',
+          bundleKey: 'ima_especies_arboreas_sinfat',
+          localFile: 'data/ima_especies_arboreas_sinfat.geojson',
+          geomType: 'point',
+          opacity: 0.96,
+          pointStyle: { radius: 6, color: '#ffffff', weight: 1.8, fillColor: '#15803d', fillOpacity: 0.96 },
+          titleField: 'nome_comum',
+          subtitleFields: ['nome_cientifico', 'produto', 'volume', 'fce_codigo', 'fonte'],
+          description: 'Ocorrências georreferenciadas de espécies arbóreas nativas declaradas em processos de Autorização de Corte (AuC) no Sinfat / IMA-SC.',
         },
       ],
     },
@@ -874,6 +924,19 @@ window.GeoCatalog = (() => {
           description: 'Mapeamento oficial de campo do Serviço Geológico do Brasil (SGB/CPRM) delimitando 12 setores de risco alto a inundações em Araquari (Itinga, Porto Grande, Centro e Itapocu).',
         },
         {
+          id: 'sgb_suscetibilidade_inundacao',
+          name: 'Suscetibilidade a Inundação — Divisa Sul (SGB/CPRM — 3)',
+          bundleKey: 'sgb_suscetibilidade_inundacao',
+          localFile: 'data/sgb_suscetibilidade_inundacao.geojson',
+          geomType: 'polygon',
+          opacity: 0.62,
+          colorField: 'classe',
+          colorMap: SGB_INUND_COLORS,
+          titleField: 'classe',
+          subtitleFields: ['processo', 'municipio_mapeado', 'area_ha', 'fonte'],
+          description: 'Recorte da Carta de Suscetibilidade SGB/CPRM interceptando o extremo sul de Araquari (divisa Barra Velha; município ainda sem carta própria publicada).',
+        },
+        {
           id: 'cota_5m_planicie_araquari',
           name: 'Isolinha Cota ~5 m — Planície (MDE Terrarium)',
           bundleKey: 'cota_5m_planicie_araquari',
@@ -891,8 +954,22 @@ window.GeoCatalog = (() => {
       id: 'geologia_relevo',
       name: 'Geologia, Geomorfologia, Solos e Altimetria',
       expanded: false,
-      description: 'Bases geológicas, geomorfológicas e pedológicas (IBGE BDIA 1:250k), Aquíferos (SGB) e Curvas de Nível (SRTM/DEM).',
+      description: 'Bases geológicas, geomorfológicas e pedológicas (IBGE BDIA 1:250k), Declividade IMA-SC, Aquíferos (SGB) e Curvas de Nível.',
       layers: [
+        {
+          id: 'ima_declividade_araquari',
+          name: 'Declividade do Relevo — 5 Classes (IMA-SC / SIGSC)',
+          bundleKey: 'ima_declividade_araquari',
+          isExtraBundle: true,
+          localFile: 'data/ima_declividade_araquari.geojson',
+          geomType: 'polygon',
+          opacity: 0.54,
+          colorField: 'classe_curta',
+          colorMap: IMA_DECLIV_COLORS,
+          titleField: 'classe_declividade',
+          subtitleFields: ['classe_curta', 'area_km2', 'fonte'],
+          description: 'Mapeamento oficial estadual de declividade do terreno em 5 faixas (0–5%, 5–12%, 12–25%, 25–45% e >45%) para análise de drenagem e restrições geomorfológicas.',
+        },
         {
           id: 'ibge_geologia',
           name: 'Mapa Geológico / Litologia (IBGE BDIA 1:250k)',

@@ -231,6 +231,24 @@ window.GeoLayerEngine = (() => {
     legislacao: 'Base Legal',
     aviso_origem: 'Aviso de Procedência',
     iou_ajuste_limite: 'Índice IoU de Ajuste ao Limite',
+    // Meio Ambiente, Declividade & MMA/SGB (Fase 5)
+    faixa_app: 'Faixa Legal de APP',
+    origem_lote: 'Articulação / Lote SIGSC',
+    classe_codigo: 'Código da Classe',
+    classe_declividade: 'Classe de Declividade',
+    classe_curta: 'Declividade (%)',
+    nome_comum: 'Nome Popular (Espécie)',
+    nome_cientifico: 'Nome Científico',
+    produto: 'Produto Florestal (SINFAT)',
+    volume: 'Volume Estimado',
+    fce_codigo: 'Código FCE / Processo',
+    processo: 'Tipo de Fenômeno',
+    municipio_mapeado: 'Município de Origem da Carta',
+    bioma_recorte: 'Recorte Bioma / Zona',
+    codigo_area: 'Código MMA',
+    importancia: 'Importância Biológica',
+    prioridade_acao: 'Prioridade de Ação',
+    acao_principal: 'Ação Preconizada (MMA)',
   };
 
   function prettyFieldName(key) {
