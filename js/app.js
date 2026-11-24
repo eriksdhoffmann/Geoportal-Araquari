@@ -1449,7 +1449,20 @@
       setDrawerOpen(true);
       if (drawerTab !== 'layers') drawerTab = 'layers';
       const found = window.GeoCatalog.getLayerById(layerId);
-      if (found) expandedGroups.add(found.group.id);
+      if (found) {
+        expandedGroups.add(found.group.id);
+        const q = searchFilterText.trim().toLowerCase();
+        if (
+          q &&
+          !found.group.name.toLowerCase().includes(q) &&
+          !found.layer.name.toLowerCase().includes(q) &&
+          !(found.layer.description || '').toLowerCase().includes(q)
+        ) {
+          searchFilterText = '';
+          const layerSearchEl = document.getElementById('layerSearchInput');
+          if (layerSearchEl) layerSearchEl.value = '';
+        }
+      }
       renderLayerDrawer();
       const promise = engine.enableLayer(layerId).then(() => {
         engine.zoomToLayer(layerId);
@@ -1466,6 +1479,7 @@
     activateBasemap(basemapId) {
       closeModal();
       setDrawerOpen(true);
+      if (drawerTab !== 'layers') drawerTab = 'layers';
       tools.disableSwipe();
       engine.setBasemapActive(basemapId, true, true);
       renderLayerDrawer();

@@ -9,6 +9,61 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/geoportal.css" />
+  <script>
+    (() => {
+      function getAvailableMapOpener() {
+        try {
+          if (window.opener && !window.opener.closed && window.opener.GeoPortalMapNav) {
+            return window.opener;
+          }
+        } catch {
+          // Cross-origin ou opener indisponível
+        }
+        return null;
+      }
+
+      function handleReturnToMapClick(e, { layerId = '', basemapId = '' } = {}) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+          return;
+        }
+        const opener = getAvailableMapOpener();
+        if (!opener) {
+          // Sem aba original disponível: navega na aba atual pelo href do link
+          return;
+        }
+        e.preventDefault();
+        try {
+          if (layerId) opener.GeoPortalMapNav.activateLayer(layerId);
+          else if (basemapId) opener.GeoPortalMapNav.activateBasemap(basemapId);
+          else opener.GeoPortalMapNav.focusMap();
+        } catch {
+          const targetEl = e.target instanceof Element ? e.target : e.target?.parentElement;
+          const link = targetEl?.closest?.('a[href]');
+          if (link) window.location.href = link.href;
+          return;
+        }
+        try {
+          opener.focus();
+        } catch {
+          // ignore
+        }
+        try {
+          window.close();
+        } catch {
+          // ignore
+        }
+      }
+
+      window.__geoHandleReturnToMapClick = handleReturnToMapClick;
+
+      document.addEventListener('click', (e) => {
+        const targetEl = e.target instanceof Element ? e.target : e.target?.parentElement;
+        if (targetEl?.closest?.('[data-return-to-map]')) {
+          handleReturnToMapClick(e);
+        }
+      });
+    })();
+  </script>
   <style>
     html, body {
       overflow: auto !important;

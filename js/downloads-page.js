@@ -476,19 +476,29 @@
     }
   }
 
-  document.querySelectorAll('[data-return-to-map]').forEach((el) => {
-    el.addEventListener('click', (e) => handleReturnToMapClick(e));
-  });
+  const dispatchReturnToMap = (e, opts) => {
+    if (typeof window.__geoHandleReturnToMapClick === 'function') {
+      window.__geoHandleReturnToMapClick(e, opts);
+      return;
+    }
+    handleReturnToMapClick(e, opts);
+  };
+
+  if (typeof window.__geoHandleReturnToMapClick !== 'function') {
+    document.querySelectorAll('[data-return-to-map]').forEach((el) => {
+      el.addEventListener('click', (e) => handleReturnToMapClick(e));
+    });
+  }
 
   document.getElementById('dlResults').addEventListener('click', (e) => {
     const mapLayerLink = e.target.closest('[data-open-map-layer]');
     if (mapLayerLink) {
-      handleReturnToMapClick(e, { layerId: mapLayerLink.dataset.openMapLayer });
+      dispatchReturnToMap(e, { layerId: mapLayerLink.dataset.openMapLayer });
       return;
     }
     const mapBmLink = e.target.closest('[data-open-map-basemap]');
     if (mapBmLink) {
-      handleReturnToMapClick(e, { basemapId: mapBmLink.dataset.openMapBasemap });
+      dispatchReturnToMap(e, { basemapId: mapBmLink.dataset.openMapBasemap });
       return;
     }
     const mb = e.target.closest('[data-dl-meta]');
