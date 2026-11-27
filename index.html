@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Geoportal Araquari — Base Geoespacial Integrada</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 50'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%230b5cb8'/%3E%3Cstop offset='1' stop-color='%23033c8e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M12.5 32.5L23 47.5L33.5 32.5H12.5Z' fill='%23059669'/%3E%3Ccircle cx='23' cy='20.5' r='17.5' fill='url(%23g1)'/%3E%3Ccircle cx='23' cy='20.5' r='9.4' fill='%23ffffff'/%3E%3Ccircle cx='23' cy='20.5' r='3.3' fill='%23f59e0b'/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/png" href="assets/favicon-geolab.png?v=2" />
   <meta name="description" content="Geoportal Interativo do Município de Araquari (SC — IBGE 4201307) no padrão Geoportal Florianópolis: Ortofoto Oficial SC (SIGSC 2012) × Satélite HD, FBDS (Uso do Solo, APP, Hidrografia, Nascentes), Defesa Civil (SGB/CPRM), IMA-SC, IBGE Censo 2022, Geologia, Solos, Sistema Viário e Downloads." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,51 +12,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-  <link rel="stylesheet" href="css/geoportal.css" />
+  <link rel="stylesheet" href="css/geoportal.css?v=20261127-1" />
 </head>
 <body>
   <!-- ========================= CABEÇALHO SUPERIOR ========================= -->
   <header class="gp-header">
     <div class="gp-brand-group">
-      <!-- Logo Institucional GEO PORTAL ARAQUARI -->
       <a href="#map" class="gp-logo-link" id="logoHomeLink" title="Geoportal Araquari — Base Geoespacial Integrada (SC)">
-        <svg class="gp-geo-pin-svg" viewBox="0 0 46 50" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <defs>
-            <linearGradient id="araPinBlue" x1="6" y1="4" x2="40" y2="38" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#1473db"/>
-              <stop offset="55%" stop-color="#033c8e"/>
-              <stop offset="100%" stop-color="#022559"/>
-            </linearGradient>
-            <linearGradient id="araPinGreen" x1="13" y1="32" x2="33" y2="48" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#10b981"/>
-              <stop offset="55%" stop-color="#059669"/>
-              <stop offset="100%" stop-color="#047857"/>
-            </linearGradient>
-            <linearGradient id="araPinGold" x1="19" y1="17" x2="27" y2="24" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#fbbf24"/>
-              <stop offset="100%" stop-color="#d97706"/>
-            </linearGradient>
-          </defs>
-          <!-- Ponteira esmeralda (Mata Atlântica & Baía da Babitonga) -->
-          <path d="M12.5 32.5L23 47.5L33.5 32.5H12.5Z" fill="url(#araPinGreen)"/>
-          <!-- Corpo circular azul institucional Araquari -->
-          <circle cx="23" cy="20.5" r="17.5" fill="url(#araPinBlue)"/>
-          <circle cx="23" cy="20.5" r="15.4" stroke="#7dd3fc" stroke-opacity="0.38" stroke-width="1"/>
-          <!-- Malha geográfica central -->
-          <circle cx="23" cy="20.5" r="9.4" fill="#ffffff"/>
-          <path d="M14.2 20.5H31.8M23 11.7V29.3" stroke="#033c8e" stroke-opacity="0.22" stroke-width="1"/>
-          <ellipse cx="23" cy="20.5" rx="4.6" ry="8.8" stroke="#033c8e" stroke-opacity="0.22" stroke-width="1"/>
-          <!-- Ponto focal dourado -->
-          <circle cx="23" cy="20.5" r="3.2" fill="url(#araPinGold)"/>
-        </svg>
-
-        <div class="gp-geo-wordmark">
-          <div class="gp-geo-top">
-            <span>GEO</span>
-            <span class="gp-geo-portal-tag">PORTAL</span>
-          </div>
-          <span class="gp-geo-bottom">ARAQUARI</span>
-        </div>
+        <img
+          src="assets/logo-geoportal.png"
+          alt="Geoportal"
+          style="height:28px;width:auto;object-fit:contain;display:block"
+        />
       </a>
 
       <div class="gp-brand-divider" aria-hidden="true"></div>
@@ -83,11 +50,190 @@
     <nav class="gp-nav" id="mainNav" aria-label="Navegação Principal">
       <button class="gp-nav-btn" data-nav="home">Início</button>
       <button class="gp-nav-btn active" data-nav="map">Mapas Interativos</button>
-      <a class="gp-nav-btn" href="downloads.html" target="_blank" rel="opener" style="text-decoration:none">Download ↗</a>
+      <a class="gp-nav-btn" href="downloads.html" style="text-decoration:none">Download</a>
       <button class="gp-nav-btn highlight-doc" data-nav="docs">Emissão de Documentos</button>
       <button class="gp-nav-btn" data-nav="help">Ajuda</button>
     </nav>
   </header>
+
+  <!-- ========================= PÁGINA INICIAL (ESTILO GEOPORTAL FLORIANÓPOLIS) ========================= -->
+  <section class="gp-home-screen" id="homeScreen" aria-label="Página Inicial do Geoportal Araquari">
+    <div class="gp-home-hero">
+      <div class="gp-home-hero-inner">
+        <p class="gp-home-eyebrow">Bem-vindo ao</p>
+        <h1 class="gp-home-title">GeoPortal Araquari</h1>
+        <p class="gp-home-subtitle">Município de Araquari — SC (IBGE 4201307) • Dados Geoespaciais Oficiais</p>
+
+        <div class="gp-home-search-wrap">
+          <div class="gp-home-search-box">
+            <span class="gp-home-search-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="M21 21l-4.35-4.35"></path>
+              </svg>
+            </span>
+            <input
+              type="text"
+              id="homeSearchInput"
+              class="gp-home-search-input"
+              placeholder="O que você procura? (bairro, zoneamento, risco, saúde, APP, Censo 2022...)"
+              autocomplete="off"
+            />
+            <button type="button" class="gp-home-search-btn" id="homeSearchBtn">Pesquisar</button>
+          </div>
+          <div class="gp-home-search-results" id="homeSearchResults"></div>
+        </div>
+
+        <div class="gp-home-chips" aria-label="Buscas rápidas">
+          <button type="button" class="gp-home-chip" data-home-chip="zoneamento">zoneamento (LC 281)</button>
+          <button type="button" class="gp-home-chip" data-home-chip="risco">defesa civil / riscos</button>
+          <button type="button" class="gp-home-chip" data-home-chip="uso do solo">uso do solo (FBDS)</button>
+          <button type="button" class="gp-home-chip" data-home-chip="saúde">unidades de saúde</button>
+          <button type="button" class="gp-home-chip" data-home-chip="sigef">imóveis rurais (SIGEF)</button>
+          <button type="button" class="gp-home-chip" data-home-chip="censo">censo 2022</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="gp-home-services-wrap">
+      <div class="gp-home-grid">
+        <button type="button" class="gp-home-tile is-featured" data-home-action="map_clean">
+          <span class="gp-home-tile-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+              <line x1="8" y1="2" x2="8" y2="18"></line>
+              <line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+          </span>
+          <span class="gp-home-tile-label">Mapa Interativo</span>
+        </button>
+
+        <button type="button" class="gp-home-tile" data-home-preset="plano_diretor">
+          <span class="gp-home-tile-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="1.5"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="9" y1="9" x2="9" y2="21"></line>
+            </svg>
+          </span>
+          <span class="gp-home-tile-label">Plano Diretor (LC 281)</span>
+        </button>
+
+        <button type="button" class="gp-home-tile" data-home-preset="ambiental_fbds">
+          <span class="gp-home-tile-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22V12"></path>
+              <path d="M12 12C12 7 7 3 2 3c0 5 4 9 10 9z"></path>
+              <path d="M12 12c0-5 5-9 10-9 0 5-4 9-10 9z"></path>
+            </svg>
+          </span>
+          <span class="gp-home-tile-label">Consulta Ambiental (FBDS / APP)</span>
+        </button>
+
+        <button type="button" class="gp-home-tile" data-home-preset="defesa_civil">
+          <span class="gp-home-tile-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </span>
+          <span class="gp-home-tile-label">Defesa Civil &amp; Riscos (SGB)</span>
+        </button>
+
+        <a class="gp-home-tile" href="downloads.html">
+          <span class="gp-home-tile-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </span>
+          <span class="gp-home-tile-label">Downloads</span>
+        </a>
+
+        <button type="button" class="gp-home-tile" data-home-preset="logistica_servicos">
+          <span class="gp-home-tile-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <line x1="12" y1="8" x2="12" y2="16"></line>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+          </span>
+          <span class="gp-home-tile-label">Saúde (CNES) &amp; Escolas</span>
+        </button>
+
+        <button type="button" class="gp-home-tile" data-home-preset="geologia_relevo">
+          <span class="gp-home-tile-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 19l6-11 4 7 3-5 5 9H3z"></path>
+            </svg>
+          </span>
+          <span class="gp-home-tile-label">Mapa Físico &amp; Relevo</span>
+        </button>
+
+        <button type="button" class="gp-home-tile" data-home-action="licenciamento_ima">
+          <span class="gp-home-tile-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <path d="M9 15l2 2 4-4"></path>
+            </svg>
+          </span>
+          <span class="gp-home-tile-label">Licenciamento (IMA-SC)</span>
+        </button>
+
+        <button type="button" class="gp-home-tile" data-home-action="imoveis_sigef">
+          <span class="gp-home-tile-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="1.5"></rect>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="12" y1="3" x2="12" y2="21"></line>
+            </svg>
+          </span>
+          <span class="gp-home-tile-label">Imóveis Rurais (INCRA / SIGEF)</span>
+        </button>
+
+        <button type="button" class="gp-home-tile" data-home-preset="socioeconomico_censo">
+          <span class="gp-home-tile-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+              <line x1="2" y1="20" x2="22" y2="20"></line>
+            </svg>
+          </span>
+          <span class="gp-home-tile-label">Censo 2022 &amp; IPHAN</span>
+        </button>
+
+        <button type="button" class="gp-home-tile" data-home-preset="hidrografia_aguas">
+          <span class="gp-home-tile-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+            </svg>
+          </span>
+          <span class="gp-home-tile-label">Hidrografia &amp; Bacias</span>
+        </button>
+
+        <button type="button" class="gp-home-tile" data-home-action="energia_dutos">
+          <span class="gp-home-tile-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </span>
+          <span class="gp-home-tile-label">Energia (ANEEL) &amp; Dutos</span>
+        </button>
+      </div>
+
+      <div class="gp-home-footer-strip">
+        <span><b>76 Camadas Vetoriais</b> auditadas (36.439 feições)</span>
+        <span>•</span>
+        <span><b>IBGE 4201307</b> (386,872 km² • 45.283 hab.)</span>
+        <span>•</span>
+        <span><b>SIRGAS 2000 / UTM 22S</b></span>
+      </div>
+    </div>
+  </section>
 
   <!-- ========================= ESPAÇO DO MAPA ========================= -->
   <main class="gp-workspace" id="workspace">
@@ -157,7 +303,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
       </button>
       <button class="gp-tool-btn" id="btnLocate" title="Minha Localização (GPS)">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
       </button>
     </aside>
 
@@ -190,7 +336,13 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15l3-3 3 3"/></svg>
       </button>
       <button class="gp-tool-btn" data-panel="select" title="Diagnóstico Territorial Rápido (Bairro, APP, Uso do Solo, Risco, Bacia)">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M18 11V6a2 2 0 0 0-4 0v4"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-5.9-2.3L3.3 17a2 2 0 0 1 2.8-2.8L8 16"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="2.5" y="3.5" width="13" height="13" rx="1" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 2"/>
+          <rect x="4" y="5" width="7" height="7" fill="#facc15" stroke="#ca8a04" stroke-width="1.1"/>
+          <path d="M9.5 9.5L12.5 19.5L14.6 15.8L18.5 14.5L9.5 9.5Z" fill="#ffffff" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <circle cx="19" cy="5.5" r="4" fill="#033c8e"/>
+          <text x="19" y="7.7" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="6.5" font-weight="900">?</text>
+        </svg>
       </button>
     </aside>
 
@@ -278,13 +430,13 @@
   <script src="https://unpkg.com/shpjs@4.0.4/dist/shp.min.js" defer></script>
 
   <!-- Limite Municipal Oficial IBGE (4201307) + Bundle Instantâneo + Módulos do Geoportal -->
-  <script src="js/limite-araquari.js"></script>
-  <script src="js/araquari-bundle.js"></script>
-  <script src="js/coords.js"></script>
-  <script src="js/catalog.js"></script>
-  <script src="js/metadata.js"></script>
-  <script src="js/layer-engine.js"></script>
-  <script src="js/tools.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/limite-araquari.js?v=20261127-1"></script>
+  <script src="js/araquari-bundle.js?v=20261127-1"></script>
+  <script src="js/coords.js?v=20261127-1"></script>
+  <script src="js/catalog.js?v=20261127-1"></script>
+  <script src="js/metadata.js?v=20261127-1"></script>
+  <script src="js/layer-engine.js?v=20261127-1"></script>
+  <script src="js/tools.js?v=20261127-1"></script>
+  <script src="js/app.js?v=20261127-1"></script>
 </body>
 </html>

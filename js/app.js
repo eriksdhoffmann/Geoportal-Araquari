@@ -159,17 +159,15 @@
     onSwipeStateChange: renderSwipeOverlay,
   });
 
-  // Inicialização padrão: Satélite HD (recortado ao limite oficial IBGE 4201307) + Limite + Bairros Oficiais
+  // Inicialização padrão limpa: Satélite HD recortado ao limite oficial IBGE 4201307 (sem poluição de camadas)
   engine.setBasemapActive('satelite_global', true, true);
   syncMapBackground();
-  engine.enableLayer('limite_municipal_ibge');
-  engine.enableLayer('bairros_araquari');
 
-  // Deep-linking via ?layer=id1,id2 (ex: vindo de downloads.html)
+  // Deep-linking via ?layer=id1,id2 ou ?nav=home|docs|help (ex: vindo de downloads.html)
+  const initUrlParams = new URLSearchParams(window.location.search);
   (() => {
-    const params = new URLSearchParams(window.location.search);
-    const reqLayers = (params.get('layer') || '').split(',').map((s) => s.trim()).filter(Boolean);
-    const reqBasemap = (params.get('basemap') || '').trim();
+    const reqLayers = (initUrlParams.get('layer') || '').split(',').map((s) => s.trim()).filter(Boolean);
+    const reqBasemap = (initUrlParams.get('basemap') || '').trim();
     if (reqBasemap) engine.setBasemapActive(reqBasemap, true, true);
     if (reqLayers.length) {
       reqLayers.forEach((lid, i) => {
@@ -1153,24 +1151,55 @@
     document.getElementById('mainNav')?.classList.remove('mobile-open');
   }
 
+  const homeScreenEl = document.getElementById('homeScreen');
+
+  function setHomeOpen(open) {
+    if (!homeScreenEl) return;
+    homeScreenEl.classList.toggle('open', open);
+    if (open) {
+      modalBackdrop?.classList.remove('open');
+      homeScreenEl.scrollTop = 0;
+      setNavActive('home');
+    } else {
+      setNavActive('map');
+      setTimeout(() => map.invalidateSize(), 60);
+    }
+  }
+
   function closeModal() {
     modalBackdrop?.classList.remove('open');
-    setNavActive('map');
+    if (homeScreenEl?.classList.contains('open')) {
+      setNavActive('home');
+    } else {
+      setNavActive('map');
+    }
   }
 
   document.getElementById('modalClose')?.addEventListener('click', closeModal);
   modalBackdrop?.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
+  document.getElementById('logoHomeLink')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    modalBackdrop?.classList.remove('open');
+    setHomeOpen(false);
+  });
 
   function openNavSection(navId) {
-    setNavActive(navId);
+    document.getElementById('mainNav')?.classList.remove('mobile-open');
     if (navId === 'map') {
       modalBackdrop?.classList.remove('open');
+      setHomeOpen(false);
       return;
     }
 
+    if (navId === 'home') {
+      setHomeOpen(true);
+      return;
+    }
+
+    setNavActive(navId);
     modalBackdrop?.classList.add('open');
 
-    if (navId === 'home') {
+    if (false) {
       modalTitle.textContent = 'Geoportal Araquari — Visão Geral e Mapas Temáticos Integrados';
       const totalLayers = window.GeoCatalog.getAllLayers().length;
       modalBody.innerHTML = `
@@ -1371,6 +1400,7 @@
     const p = THEMATIC_PRESETS.find((x) => x.id === presetId);
     if (!p) return;
     closeModal();
+    setHomeOpen(false);
     engine.clearAllLayers();
     tools.disableSwipe();
     engine.setBasemapActive(p.basemap, true, true);
@@ -1473,6 +1503,7 @@
   window.GeoPortalMapNav = {
     focusMap() {
       closeModal();
+      setHomeOpen(false);
       try {
         window.focus();
       } catch {
@@ -1481,6 +1512,7 @@
     },
     activateLayer(layerId) {
       closeModal();
+      setHomeOpen(false);
       setDrawerOpen(true);
       if (drawerTab !== 'layers') drawerTab = 'layers';
       const found = window.GeoCatalog.getLayerById(layerId);
@@ -1513,6 +1545,7 @@
     },
     activateBasemap(basemapId) {
       closeModal();
+      setHomeOpen(false);
       setDrawerOpen(true);
       if (drawerTab !== 'layers') drawerTab = 'layers';
       tools.disableSwipe();
@@ -1526,6 +1559,209 @@
       }
     },
   };
+
+  // ==================== PÁGINA INICIAL (ESTILO FLORIANÓPOLIS) ====================
+  const homeSearchInput = document.getElementById('homeSearchInput');
+  const homeSearchBtn = document.getElementById('homeSearchBtn');
+  const homeSearchResults = document.getElementById('homeSearchResults');
+
+  function normHomeStr(s) {
+    return String(s || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+  }
+
+  function buildHomeSearchMatches(rawQuery) {
+    const q = normHomeStr(rawQuery).trim();
+    if (!q) return [];
+    const results = [];
+
+    // 1. Bairros Oficiais (10)
+    const bairrosFeats = window.GEOARAQUARI_BUNDLE?.bairros_araquari?.features || [];
+    bairrosFeats.forEach((f) => {
+      const nm = f.properties?.nome || '';
+      if (nm && normHomeStr(nm).includes(q)) {
+        results.push({
+          badge: 'Bairro',
+          title: nm,
+          sub: f.properties?.populacao_2022 ? `Pop. Censo 2022: ${f.properties.populacao_2022.toLocaleString('pt-BR')} hab. • Focar no mapa` : 'Bairro oficial de Araquari',
+          run: () => {
+            setHomeOpen(false);
+            engine.enableLayer('bairros_araquari').then(() => {
+              const b = L.geoJSON(f).getBounds();
+              if (b.isValid()) map.fitBounds(b, { padding: [48, 48], maxZoom: 15 });
+            });
+          },
+        });
+      }
+    });
+
+    // 2. Mapas Temáticos (Combos)
+    THEMATIC_PRESETS.forEach((p) => {
+      if (normHomeStr(`${p.title} ${p.desc}`).includes(q)) {
+        results.push({
+          badge: 'Mapa Temático',
+          title: p.title,
+          sub: p.desc,
+          run: () => applyPreset(p.id),
+        });
+      }
+    });
+
+    // 3. Camadas Vetoriais (76)
+    window.GeoCatalog.getAllLayers().forEach((layer) => {
+      const hay = normHomeStr(`${layer.name} ${layer.description || ''} ${layer.groupName || ''}`);
+      if (hay.includes(q)) {
+        results.push({
+          badge: 'Camada',
+          title: layer.name,
+          sub: layer.groupName || 'Camada vetorial',
+          run: () => {
+            setHomeOpen(false);
+            window.GeoPortalMapNav.activateLayer(layer.id);
+          },
+        });
+      }
+    });
+
+    // 4. Mapas Base (10)
+    BASEMAPS.forEach((bm) => {
+      if (normHomeStr(`${bm.name} ${bm.category || ''}`).includes(q)) {
+        results.push({
+          badge: 'Mapa Base',
+          title: bm.name,
+          sub: `${bm.category || 'Mapa Base'} (${bm.year || ''})`,
+          run: () => {
+            setHomeOpen(false);
+            window.GeoPortalMapNav.activateBasemap(bm.id);
+          },
+        });
+      }
+    });
+
+    return results.slice(0, 12);
+  }
+
+  function renderHomeSearch(openFirst = false) {
+    if (!homeSearchInput || !homeSearchResults) return;
+    const q = homeSearchInput.value.trim();
+    if (!q) {
+      homeSearchResults.innerHTML = '';
+      homeSearchResults.classList.remove('open');
+      return;
+    }
+    const items = buildHomeSearchMatches(q);
+    if (openFirst && items.length === 1) {
+      homeSearchResults.classList.remove('open');
+      items[0].run();
+      return;
+    }
+    if (!items.length) {
+      homeSearchResults.innerHTML = `<div class="gp-search-empty">Nenhum dado encontrado para "${escapeHtml(q)}". Tente "zoneamento", "Itinga", "risco", "saúde", "FBDS", "SIGEF" ou "Censo 2022".</div>`;
+      homeSearchResults.classList.add('open');
+      return;
+    }
+    homeSearchResults.innerHTML = items
+      .map(
+        (it, idx) => `
+      <div class="gp-search-item" data-home-res-idx="${idx}">
+        <span class="gp-search-badge">${escapeHtml(it.badge)}</span>
+        <div style="min-width:0">
+          <div class="gp-search-item-title">${escapeHtml(it.title)}</div>
+          <div class="gp-search-item-sub">${escapeHtml(it.sub)}</div>
+        </div>
+      </div>`
+      )
+      .join('');
+    homeSearchResults.classList.add('open');
+    homeSearchResults.querySelectorAll('[data-home-res-idx]').forEach((el) => {
+      el.addEventListener('click', () => {
+        const item = items[Number(el.dataset.homeResIdx)];
+        homeSearchResults.classList.remove('open');
+        if (item) item.run();
+      });
+    });
+  }
+
+  homeSearchInput?.addEventListener('input', () => renderHomeSearch(false));
+  homeSearchInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      renderHomeSearch(true);
+    } else if (e.key === 'Escape') {
+      homeSearchResults?.classList.remove('open');
+    }
+  });
+  homeSearchBtn?.addEventListener('click', () => renderHomeSearch(true));
+
+  homeScreenEl?.querySelectorAll('[data-home-chip]').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      if (!homeSearchInput) return;
+      homeSearchInput.value = chip.dataset.homeChip || '';
+      homeSearchInput.focus();
+      renderHomeSearch(false);
+    });
+  });
+
+  homeScreenEl?.querySelectorAll('[data-home-preset]').forEach((tile) => {
+    tile.addEventListener('click', () => applyPreset(tile.dataset.homePreset));
+  });
+
+  homeScreenEl?.querySelectorAll('[data-home-action]').forEach((tile) => {
+    tile.addEventListener('click', () => {
+      const act = tile.dataset.homeAction;
+      if (act === 'map_clean') {
+        setHomeOpen(false);
+        tools.disableSwipe();
+        engine.clearAllLayers();
+        engine.setBasemapActive('satelite_global', true, true);
+        map.fitBounds(ARAQUARI_BOUNDS, { paddingTopLeft: [56, 22], paddingBottomRight: [window.innerWidth <= 760 ? 32 : 390, 40] });
+        renderLayerDrawer();
+      } else if (act === 'licenciamento_ima') {
+        setHomeOpen(false);
+        engine.clearAllLayers();
+        expandedGroups.add('licenciamento_ima');
+        engine.enableLayer('limite_municipal_ibge');
+        engine.enableLayer('ima_licenciamento');
+        engine.enableLayer('ima_embargos');
+        setDrawerOpen(true);
+        renderLayerDrawer();
+      } else if (act === 'imoveis_sigef') {
+        setHomeOpen(false);
+        engine.clearAllLayers();
+        expandedGroups.add('territorio_censo');
+        engine.enableLayer('limite_municipal_ibge');
+        engine.enableLayer('incra_sigef_araquari');
+        setDrawerOpen(true);
+        renderLayerDrawer();
+      } else if (act === 'energia_dutos') {
+        setHomeOpen(false);
+        engine.clearAllLayers();
+        expandedGroups.add('infraestrutura_energia_redes');
+        engine.enableLayer('limite_municipal_ibge');
+        engine.enableLayer('aneel_transmissao_linhas');
+        engine.enableLayer('aneel_subestacoes');
+        engine.enableLayer('ibge_bc25_dutos');
+        setDrawerOpen(true);
+        renderLayerDrawer();
+      }
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (homeSearchResults?.classList.contains('open') && !e.target.closest('.gp-home-search-wrap')) {
+      homeSearchResults.classList.remove('open');
+    }
+  });
+
+  // Deep-link de seção superior (?nav=home|docs|help)
+  const reqNav = (initUrlParams.get('nav') || '').trim();
+  if (reqNav === 'home') {
+    setHomeOpen(true);
+  } else if (reqNav === 'docs' || reqNav === 'help') {
+    openNavSection(reqNav);
+  }
 
   renderLayerDrawer();
 })();

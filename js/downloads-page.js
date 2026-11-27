@@ -1,12 +1,9 @@
 /**
- * Geoportal Araquari — Controlador da Página Dedicada de Downloads com Buscador Instantâneo
- * Lista todas as camadas do catálogo + mapas base + documentos oficiais da Prefeitura (PDF),
- * permitindo filtro por texto e tipo de origem, consulta aos 21 campos de metadados e download em GeoJSON/CSV.
+ * Geoportal Araquari — Página de Downloads (Padrão Institucional Geoportal Florianópolis)
  */
 (() => {
-  const { BASEMAPS, LAYER_GROUPS, ATENDE_MAPA_PDF, getLayerById } = window.GeoCatalog;
+  const { BASEMAPS, LAYER_GROUPS, ATENDE_MAPA_PDF } = window.GeoCatalog;
   const Meta = window.GeoMetadata;
-  const ATENDE_FILE = 'https://araquari.atende.net/cidadao/pagina/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&sistema=WPO&classe=UploadMidia&file=';
 
   const esc = (s) =>
     String(s ?? '')
@@ -14,183 +11,283 @@
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+
   const norm = (s) =>
     String(s || '')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase();
 
-  // Documentos Oficiais Públicos levantados em araquari.atende.net
+  const GROUP_PREFIX = {
+    territorio_censo: 'Cadastro e Limites',
+    planejamento_urbano: 'Plano Diretor e Urbanismo',
+    meio_ambiente_fbds: 'Meio Ambiente',
+    licenciamento_ima: 'Licenciamento Ambiental',
+    hidrografia_aguas: 'Hidrografia',
+    defesa_civil_riscos: 'Defesa Civil',
+    geologia_relevo_solos: 'Geologia e Relevo',
+    viario_mobilidade: 'Sistema Viário e Mobilidade',
+    equipamentos_servicos: 'Saúde, Educação e Lazer',
+    infraestrutura_energia_redes: 'Energia, Dutos e Redes',
+    socioeconomico_patrimonio: 'Censo 2022 e Patrimônio',
+    __basemaps__: 'Ortoimagens e Mapas Base',
+    __docs__: 'Documentos e Legislação',
+  };
+
+  const SECTIONS = [
+    {
+      id: 'ALL_SIG',
+      navLabel: 'Camadas em SIG do mapa',
+      title: 'Camadas em SIG do mapa',
+      subtitle: 'Acesse os arquivos vetoriais publicados no mapa interativo do GeoPortal de Araquari',
+    },
+    {
+      id: 'territorio_censo',
+      navLabel: 'Cadastro e Limites Territoriais',
+      title: 'Cadastro e Estrutura Territorial',
+      subtitle: 'Limite municipal IBGE, bairros, distritos, setores censitários, CNEFE 2022 e imóveis rurais SIGEF',
+    },
+    {
+      id: 'planejamento_urbano',
+      navLabel: 'Plano Diretor e Urbanismo',
+      title: 'Planejamento Urbano, Plano Diretor e Indústria',
+      subtitle: 'Zoneamento, macrozoneamento, perímetro urbano e sistema viário (LC nº 281/2019) e polos industriais',
+    },
+    {
+      id: 'meio_ambiente_fbds',
+      navLabel: 'Meio Ambiente e Uso do Solo',
+      title: 'Meio Ambiente, Cobertura da Terra e FBDS',
+      subtitle: 'Uso do solo 5 m, áreas de preservação permanente (APP), manguezais, terras indígenas e biodiversidade',
+    },
+    {
+      id: 'licenciamento_ima',
+      navLabel: 'Licenciamento Ambiental',
+      title: 'Licenciamento e Fiscalização Ambiental (IMA-SC)',
+      subtitle: 'Registros oficiais de licenciamento SINFAT, áreas embargadas, autos de infração e termos',
+    },
+    {
+      id: 'hidrografia_aguas',
+      navLabel: 'Hidrografia e Recursos Hídricos',
+      title: 'Hidrografia e Recursos Hídricos',
+      subtitle: 'Bacias hidrográficas, rios simples e duplos, nascentes (FBDS), poços SIAGAS e ilhas costeiras',
+    },
+    {
+      id: 'defesa_civil_riscos',
+      navLabel: 'Defesa Civil e Áreas de Risco',
+      title: 'Defesa Civil e Riscos Hidrológicos (SGB / CPRM)',
+      subtitle: 'Setores de risco alto a inundação, divisa de suscetibilidade e isolinha de planície costeira',
+    },
+    {
+      id: 'geologia_relevo_solos',
+      navLabel: 'Geologia, Solos e Relevo',
+      title: 'Geologia, Geomorfologia, Solos e Altimetria',
+      subtitle: 'Declividade IMA-SC/SIGSC, mapeamentos físicos oficiais do IBGE (BDIA), aquíferos e curvas de nível',
+    },
+    {
+      id: 'viario_mobilidade',
+      navLabel: 'Sistema Viário e Mobilidade',
+      title: 'Sistema Viário, Rodovias, Ferrovia e Mobilidade',
+      subtitle: 'Rodovias federais DNIT SNV e OAE, malha IBGE BC25-SC, ferrovia, ruas e paradas de ônibus',
+    },
+    {
+      id: 'equipamentos_servicos',
+      navLabel: 'Saúde, Educação e Lazer',
+      title: 'Equipamentos Públicos, Saúde, Educação e Lazer',
+      subtitle: 'Unidades de saúde oficiais (DataSUS/CNES), escolas, equipamentos públicos e espaços de lazer',
+    },
+    {
+      id: 'infraestrutura_energia_redes',
+      navLabel: 'Energia, Dutos e Redes',
+      title: 'Energia, Dutos, Saneamento e Apoio Náutico',
+      subtitle: 'Linhas de transmissão e concessão elétrica (ANEEL SIGEL), Oleoduto OPASC, reservatórios e trapiches',
+    },
+    {
+      id: 'socioeconomico_patrimonio',
+      navLabel: 'Censo 2022 e Patrimônio',
+      title: 'Socioeconômico (Censo IBGE 2022) e Patrimônio (IPHAN)',
+      subtitle: 'Densidade demográfica, saneamento domiciliar, FCU Horto Flor de Liz e sítios arqueológicos IPHAN',
+    },
+    {
+      id: '__basemaps__',
+      navLabel: 'Ortoimagens e Mapas Base',
+      title: 'Ortoimagens e Modelos Digitais de Terreno',
+      subtitle: 'Serviços WMS oficiais do Estado de Santa Catarina (SIGSC) e bases cartográficas de referência',
+    },
+    {
+      id: '__docs__',
+      navLabel: 'Documentos Oficiais e Leis',
+      title: 'Anexos do Plano Diretor, Planos Municipais e Indicadores',
+      subtitle: 'Documentos oficiais publicados pela Prefeitura de Araquari (Atende.Net) e indicadores IBGE SIDRA',
+    },
+  ];
+
+  function cleanDisplayName(raw) {
+    return String(raw || '')
+      .replace(/\s*—\s*/g, ' - ')
+      .replace(/\(\s*([^)]*?)\s*-\s*\d[\d.]*\s*\)/g, '($1)')
+      .trim();
+  }
+
   const MUNICIPAL_DOCS = [
     {
+      id: 'doc_ibge_ind_json',
+      name: 'Indicadores Socioeconômicos Oficiais de Araquari (IBGE SIDRA — Censo 2022, PIB 2023 e PAM 2025)',
+      category: 'Documentos e Legislação',
+      sourceClass: 'Oficial',
+      whatIsThis: 'Série consolidada da API IBGE SIDRA para Araquari (4201307): População 2022 (45.283 hab.), PIB 2023 (R$ 9,90 bi) e Produção Agrícola Municipal 2025.',
+      format: 'JSON (UTF-8)',
+      localFile: 'data/ibge_indicadores_araquari.json',
+      downloadLabel: 'JSON',
+      orgao: 'IBGE — SIDRA API',
+    },
+    {
+      id: 'doc_pd_parametros_json',
+      name: 'Tabela de Parâmetros Urbanísticos da LC nº 281/2019 (18 Zonas — Anexo 05)',
+      category: 'Documentos e Legislação',
+      sourceClass: 'Oficial',
+      whatIsThis: 'Parâmetros urbanísticos estruturados (TO, CAL, gabarito, lote mínimo, testada, recuo e usos admitidos) extraídos do Anexo 05 da LC nº 281/2019.',
+      format: 'JSON (UTF-8)',
+      localFile: 'data/plano_diretor_parametros_lc281.json',
+      downloadLabel: 'JSON',
+      orgao: 'Prefeitura de Araquari (LC nº 281/2019)',
+    },
+    {
       id: 'doc_mapa_territorial',
-      name: 'Mapa Territorial Oficial de Araquari (PDF Prefeitura)',
-      category: 'Documentos Oficiais da Prefeitura (PDF)',
+      name: 'Mapa Territorial Oficial de Araquari (Prefeitura / Atende.Net)',
+      category: 'Documentos e Legislação',
       sourceClass: 'Oficial',
-      whatIsThis: 'Prancha cartográfica geral do território municipal publicada na página oficial /cidadao/pagina/mapa da Prefeitura de Araquari.',
-      format: 'PDF Oficial (Prefeitura)',
+      whatIsThis: 'Mapa territorial institucional oficial publicado pela Prefeitura Municipal de Araquari em PDF.',
+      format: 'PDF Oficial',
       externalUrl: ATENDE_MAPA_PDF,
+      downloadLabel: 'PDF',
       orgao: 'Prefeitura Municipal de Araquari',
     },
     {
-      id: 'doc_lc_281_2019',
-      name: 'Plano Diretor Participativo — Lei Complementar nº 281/2019 (Texto Integral)',
-      category: 'Documentos Oficiais da Prefeitura (PDF)',
+      id: 'doc_pd_anexo02',
+      name: 'Plano Diretor LC nº 281/2019 — Anexo 02: Mapa de Macrozoneamento',
+      category: 'Documentos e Legislação',
       sourceClass: 'Oficial',
-      whatIsThis: 'Texto legal completo do Plano Diretor vigente de Araquari.',
-      format: 'PDF Oficial (Prefeitura)',
-      externalUrl: `${ATENDE_FILE}F8E4486C5174737DA97E56D843C9776F3DB60B19`,
+      whatIsThis: 'Prancha oficial em PDF do Macrozoneamento Municipal da Lei Complementar nº 281/2019.',
+      format: 'PDF Oficial',
+      externalUrl: 'https://araquari.atende.net/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&ajaxPrevent=1716224735011&file=A8C723A94D654E4B45E5E7C31B8E076253A0E20B&sistema=WPO&classe=UploadMidia',
+      downloadLabel: 'PDF',
       orgao: 'Prefeitura Municipal de Araquari / SEPLAN',
     },
     {
-      id: 'doc_anexo02_macro',
-      name: 'Plano Diretor — Anexo 02: Mapa de Macrozoneamento',
-      category: 'Documentos Oficiais da Prefeitura (PDF)',
+      id: 'doc_pd_anexo03',
+      name: 'Plano Diretor LC nº 281/2019 — Anexo 03: Perímetro Urbano',
+      category: 'Documentos e Legislação',
       sourceClass: 'Oficial',
-      whatIsThis: 'Anexo gráfico da LC nº 281/2019 que divide o município nas grandes macrozonas de ordenamento territorial.',
-      format: 'PDF Oficial (Prefeitura)',
-      externalUrl: `${ATENDE_FILE}C27CBA59CB7A10F9862F48B74CCE40D093A10D19`,
+      whatIsThis: 'Prancha oficial em PDF do Perímetro Urbano Legal da Lei Complementar nº 281/2019.',
+      format: 'PDF Oficial',
+      externalUrl: 'https://araquari.atende.net/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&ajaxPrevent=1716224735011&file=5E7A8D47DF7D7AF52AA0F1035AE04B2C2029F45B&sistema=WPO&classe=UploadMidia',
+      downloadLabel: 'PDF',
       orgao: 'Prefeitura Municipal de Araquari / SEPLAN',
     },
     {
-      id: 'doc_anexo03_zoneamento',
-      name: 'Plano Diretor — Anexo 03: Mapa de Zoneamento Urbano e Rural',
-      category: 'Documentos Oficiais da Prefeitura (PDF)',
+      id: 'doc_pd_anexo05',
+      name: 'Plano Diretor LC nº 281/2019 — Anexo 05: Parâmetros Urbanísticos',
+      category: 'Documentos e Legislação',
       sourceClass: 'Oficial',
-      whatIsThis: 'Anexo gráfico oficial da LC nº 281/2019 com as zonas de uso e ocupação do solo.',
-      format: 'PDF Oficial (Prefeitura)',
-      externalUrl: `${ATENDE_FILE}B9C377B83890FB82DF0F864D7342106670E53EEF`,
+      whatIsThis: 'Tabela legal oficial de índices construtivos e uso do solo por zona (LC nº 281/2019).',
+      format: 'PDF Oficial',
+      externalUrl: 'https://araquari.atende.net/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&ajaxPrevent=1716224735011&file=3CE2D86701A64E8B63E5F63218B3A0E4627396D6&sistema=WPO&classe=UploadMidia',
+      downloadLabel: 'PDF',
       orgao: 'Prefeitura Municipal de Araquari / SEPLAN',
     },
     {
-      id: 'doc_anexo05_parametros',
-      name: 'Plano Diretor — Anexo 05: Tabela de Usos Admitidos e Índices Urbanísticos',
-      category: 'Documentos Oficiais da Prefeitura (PDF)',
+      id: 'doc_pd_anexo09',
+      name: 'Plano Diretor LC nº 281/2019 — Anexo 09: Mapa de Zoneamento Urbano e Rural',
+      category: 'Documentos e Legislação',
       sourceClass: 'Oficial',
-      whatIsThis: 'Tabela oficial com taxa de ocupação, gabarito máximo, recuos, lote mínimo e usos permitidos/permissíveis por zona.',
-      format: 'PDF Oficial (Prefeitura)',
-      externalUrl: `${ATENDE_FILE}9F07FC54AA7F3BEA4397EA634C6F651AC3BCD697`,
+      whatIsThis: 'Prancha oficial em PDF do Zoneamento Urbano e Rural da Lei Complementar nº 281/2019.',
+      format: 'PDF Oficial',
+      externalUrl: 'https://araquari.atende.net/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&ajaxPrevent=1716224735011&file=AC5948B73F81E3CD28D49E3208E4B7E7E2F49873&sistema=WPO&classe=UploadMidia',
+      downloadLabel: 'PDF',
       orgao: 'Prefeitura Municipal de Araquari / SEPLAN',
     },
     {
-      id: 'doc_anexo09_perimetro',
-      name: 'Plano Diretor — Anexo 09: Mapa do Perímetro Urbano (2020)',
-      category: 'Documentos Oficiais da Prefeitura (PDF)',
+      id: 'doc_pd_anexo12',
+      name: 'Plano Diretor LC nº 281/2019 — Anexo 12: Hierarquia do Sistema Viário',
+      category: 'Documentos e Legislação',
       sourceClass: 'Oficial',
-      whatIsThis: 'Delimitação legal do perímetro urbano municipal (acompanha Anexo 10 descritivo).',
-      format: 'PDF Oficial (Prefeitura)',
-      externalUrl: `${ATENDE_FILE}5CB74941067F017D7E27AEBB920C26D99F8377FF`,
+      whatIsThis: 'Prancha oficial em PDF da Hierarquia do Sistema Viário da Lei Complementar nº 281/2019.',
+      format: 'PDF Oficial',
+      externalUrl: 'https://araquari.atende.net/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&ajaxPrevent=1716224735011&file=3B92A99D7A6E299E8AA03DC48BF23A3B89A2A02B&sistema=WPO&classe=UploadMidia',
+      downloadLabel: 'PDF',
       orgao: 'Prefeitura Municipal de Araquari / SEPLAN',
-    },
-    {
-      id: 'doc_anexo12_viario',
-      name: 'Plano Diretor — Anexo 12 & 13: Mapa do Sistema Viário e Hierarquia',
-      category: 'Documentos Oficiais da Prefeitura (PDF)',
-      sourceClass: 'Oficial',
-      whatIsThis: 'Prancha do sistema viário projetado/existente e hierarquia viária da LC nº 281/2019.',
-      format: 'PDF Oficial (Prefeitura)',
-      externalUrl: `${ATENDE_FILE}472ED082E37BB9E1B81FEBFC82FE22EA2E033436`,
-      orgao: 'Prefeitura Municipal de Araquari / SEPLAN',
-    },
-    {
-      id: 'doc_anexo05_ara2020',
-      name: 'Plano Diretor — Anexo 05 (Consolidação 2020) e Proposta de Alteração 2021',
-      category: 'Documentos Oficiais da Prefeitura (PDF)',
-      sourceClass: 'Oficial',
-      whatIsThis: 'Versão consolidada 2020 da tabela de índices urbanísticos e minuta de alterações aprovada pelo Conselho da Cidade (2021).',
-      format: 'PDF Oficial (Prefeitura)',
-      externalUrl: `${ATENDE_FILE}B206655939CC403D2C14B5B6488FE0F82E71D67F`,
-      orgao: 'Prefeitura Municipal de Araquari / Conselho da Cidade',
-    },
-    {
-      id: 'doc_pmsb_pdf',
-      name: 'PMSB — Plano Municipal de Saneamento Básico (Documento Consolidado)',
-      category: 'Documentos Oficiais da Prefeitura (PDF)',
-      sourceClass: 'Oficial',
-      whatIsThis: 'Diagnóstico e metas de abastecimento de água, esgotamento sanitário, drenagem pluvial e resíduos sólidos de Araquari.',
-      format: 'PDF Oficial (Prefeitura)',
-      externalUrl: `${ATENDE_FILE}AE371EE94E6B9DB42B823FA131717FF9D5EA43BE`,
-      orgao: 'Prefeitura Municipal de Araquari',
-    },
-    {
-      id: 'doc_pmsb_mapas_rar',
-      name: 'PMSB — Pranchas Cartográficas e Mapas (Pacote .RAR — 26,3 MB)',
-      category: 'Documentos Oficiais da Prefeitura (PDF)',
-      sourceClass: 'Oficial',
-      whatIsThis: 'Acervo compactado de mapas do Plano Municipal de Saneamento Básico (água, esgoto e drenagem) publicado pela Prefeitura.',
-      format: 'RAR Oficial (Prefeitura)',
-      externalUrl: `${ATENDE_FILE}F5ADAC78AA2E0CF3C166ECE06B67F71D583E3E20`,
-      orgao: 'Prefeitura Municipal de Araquari',
-    },
-    {
-      id: 'doc_setorizacao_rar',
-      name: 'Defesa Civil / Cadastro — Mapa de Setorização (Pacote .RAR — 20,1 MB)',
-      category: 'Documentos Oficiais da Prefeitura (PDF)',
-      sourceClass: 'Oficial',
-      whatIsThis: 'Pranchas de setorização territorial disponibilizadas no portal Atende.Net de Araquari.',
-      format: 'RAR Oficial (Prefeitura)',
-      externalUrl: `${ATENDE_FILE}E695FAD49B0EC3EF31DE962FA7DAAC6E066C3CB3`,
-      orgao: 'Prefeitura Municipal de Araquari',
     },
     {
       id: 'doc_planmob_pdf',
       name: 'PlanMob — Plano de Mobilidade Urbana de Araquari',
-      category: 'Documentos Oficiais da Prefeitura (PDF)',
+      category: 'Documentos e Legislação',
       sourceClass: 'Oficial',
-      whatIsThis: 'Estudo e diretrizes municipais de mobilidade, transporte coletivo, ciclovias e circulação viária.',
-      format: 'PDF Oficial (Prefeitura)',
-      externalUrl: `${ATENDE_FILE}0DF7F2690D47992BDC3D4572AAFA8A0043D92767`,
+      whatIsThis: 'Documento técnico oficial do Plano Municipal de Mobilidade Urbana de Araquari.',
+      format: 'PDF Oficial',
+      externalUrl: 'https://araquari.atende.net/atende.php?rot=1&aca=119&ajax=t&processo=viewFile&ajaxPrevent=1716224735011&file=0DF7F2690D47992BDC3D4572AAFA8A0043D92767&sistema=WPO&classe=UploadMidia',
+      downloadLabel: 'PDF',
       orgao: 'Prefeitura Municipal de Araquari',
+    },
+    {
+      id: 'doc_sicar_car',
+      name: 'SICAR / CAR — Consulta Pública de Imóveis Rurais (SFB / MMA)',
+      category: 'Documentos e Legislação',
+      sourceClass: 'Oficial',
+      whatIsThis: 'Portal nacional oficial do Cadastro Ambiental Rural para consulta pública de imóveis em Araquari (SC).',
+      format: 'Portal Oficial',
+      externalUrl: 'https://consultapublica.car.gov.br/publico/municipios/downloads?sigla=SC',
+      downloadLabel: 'ACESSAR',
+      orgao: 'Serviço Florestal Brasileiro / MMA',
     },
   ];
 
-  // Unify all items into searchable records
   const ALL_ITEMS = [];
+
   for (const g of LAYER_GROUPS) {
+    const prefix = GROUP_PREFIX[g.id] || g.name;
     for (const l of g.layers) {
       const m = Meta.getEntry(l.id, { ...l, groupName: g.name });
+      const cleanName = cleanDisplayName(l.name);
       ALL_ITEMS.push({
         kind: 'layer',
         id: l.id,
         groupId: g.id,
-        groupName: g.name,
-        name: l.name,
+        prefix,
+        displayLine: `- ${prefix} - ${cleanName}`,
+        cleanName,
         cfg: l,
         metaEntry: m,
-        sourceClass: m.sourceClass,
-        whatIsThis: m.whatIsThis,
-        format: m.metadata.formato,
-        orgao: m.metadata.orgao_responsavel,
-        redistributable: m.redistributable && l.type !== 'wms',
-        searchHaystack: norm(`${l.name} ${g.name} ${m.whatIsThis} ${m.metadata.orgao_responsavel} ${m.metadata.instituicao_fornecedora} ${m.metadata.formato} ${m.sourceClass}`),
+        redistributable: m.redistributable !== false && Boolean(l.localFile) && l.type !== 'wms',
+        searchHaystack: norm(`${prefix} ${cleanName} ${l.name} ${g.name} ${m.whatIsThis} ${m.metadata.orgao_responsavel}`),
       });
     }
   }
+
   for (const bm of BASEMAPS) {
-    const m = Meta.getEntry(bm.id, { ...bm, groupName: 'Mapas Base & Ortoimagens' });
+    const m = Meta.getEntry(bm.id, { ...bm, groupName: 'Ortoimagens e Mapas Base' });
+    const cleanName = cleanDisplayName(bm.name);
     ALL_ITEMS.push({
       kind: 'basemap',
       id: bm.id,
       groupId: '__basemaps__',
-      groupName: 'Mapas Base & Ortoimagens',
-      name: bm.name,
+      prefix: GROUP_PREFIX.__basemaps__,
+      displayLine: `- Ortoimagens e Mapas Base - ${cleanName}`,
+      cleanName,
       cfg: bm,
       metaEntry: m,
-      sourceClass: m.sourceClass,
-      whatIsThis: m.whatIsThis,
-      format: m.metadata.formato,
-      orgao: m.metadata.orgao_responsavel,
       redistributable: false,
-      searchHaystack: norm(`${bm.name} ${bm.category} ${m.whatIsThis} ${m.metadata.orgao_responsavel} ${bm.year}`),
+      searchHaystack: norm(`ortoimagens mapas base ${cleanName} ${bm.category || ''} ${m.metadata.orgao_responsavel}`),
     });
   }
+
   for (const d of MUNICIPAL_DOCS) {
     ALL_ITEMS.push({
       kind: 'doc',
       id: d.id,
       groupId: '__docs__',
-      groupName: d.category,
-      name: d.name,
+      prefix: GROUP_PREFIX.__docs__,
+      displayLine: `- Documentos e Legislação - ${d.name}`,
+      cleanName: d.name,
       cfg: d,
       metaEntry: Meta.makeMeta({
         sourceClass: d.sourceClass,
@@ -198,29 +295,25 @@
         nome_camada: d.name,
         categoria: d.category,
         orgao_responsavel: d.orgao,
-        instituicao_fornecedora: 'Portal Atende.Net — Prefeitura de Araquari',
-        url_fonte_original: 'https://araquari.atende.net/cidadao/pagina/servicos',
-        url_download_ou_servico: d.externalUrl,
+        instituicao_fornecedora: d.orgao,
+        url_fonte_original: d.externalUrl || d.localFile,
+        url_download_ou_servico: d.externalUrl || d.localFile,
         formato: d.format,
-        tipo_geometria: 'Documento Cartográfico / Legal (PDF)',
-        status_validacao: 'DISPONÍVEL, MAS NÃO INTEGRADA',
+        tipo_geometria: 'Documento / Tabela Oficial',
+        status_validacao: 'PUBLICADO',
       }),
-      sourceClass: d.sourceClass,
-      whatIsThis: d.whatIsThis,
-      format: d.format,
-      orgao: d.orgao,
-      redistributable: false,
-      searchHaystack: norm(`${d.name} ${d.category} ${d.whatIsThis} ${d.orgao} pdf`),
+      redistributable: Boolean(d.localFile),
+      searchHaystack: norm(`documentos legislacao plano diretor ${d.name} ${d.whatIsThis} ${d.orgao}`),
     });
   }
 
-  let selectedCat = 'ALL';
-  let selectedSrc = 'ALL';
+  let selectedSectionId = 'ALL_SIG';
   let queryText = '';
 
   const searchInput = document.getElementById('dlSearchInput');
+  const clearBtn = document.getElementById('dlSearchClear');
   const urlQ = new URLSearchParams(window.location.search).get('q');
-  if (urlQ) {
+  if (urlQ && searchInput) {
     queryText = urlQ;
     searchInput.value = urlQ;
   }
@@ -228,88 +321,70 @@
   function getFilteredItems() {
     const q = norm(queryText.trim());
     return ALL_ITEMS.filter((it) => {
-      if (selectedCat !== 'ALL' && it.groupId !== selectedCat) return false;
-      if (selectedSrc !== 'ALL' && it.sourceClass !== selectedSrc) return false;
+      if (selectedSectionId === 'ALL_SIG') {
+        if (!q && it.kind !== 'layer') return false;
+      } else if (it.groupId !== selectedSectionId) {
+        return false;
+      }
       if (q && !it.searchHaystack.includes(q)) return false;
       return true;
     });
   }
 
   function renderSidebar() {
-    const list = document.getElementById('dlCategoryList');
-    const q = norm(queryText.trim());
-    const baseFiltered = ALL_ITEMS.filter(
-      (it) => (selectedSrc === 'ALL' || it.sourceClass === selectedSrc) && (!q || it.searchHaystack.includes(q))
-    );
-    const counts = {};
-    for (const it of baseFiltered) counts[it.groupId] = (counts[it.groupId] || 0) + 1;
+    const navEl = document.getElementById('dlCategoryList');
+    if (!navEl) return;
+    navEl.innerHTML = SECTIONS.map(
+      (s) => `
+      <button type="button" class="dl-nav-item ${selectedSectionId === s.id ? 'active' : ''}" data-sec-id="${esc(s.id)}">
+        ${esc(s.navLabel)}
+      </button>`
+    ).join('');
+  }
 
-    const cats = [
-      { id: 'ALL', label: 'Todas as Categorias', count: baseFiltered.length },
-      ...LAYER_GROUPS.map((g) => ({ id: g.id, label: g.name, count: counts[g.id] || 0 })),
-      { id: '__basemaps__', label: 'Mapas Base & Ortoimagens', count: counts['__basemaps__'] || 0 },
-      { id: '__docs__', label: 'Documentos Oficiais Prefeitura (PDF)', count: counts['__docs__'] || 0 },
-    ];
-
-    list.innerHTML = cats
-      .map(
-        (c) => `
-        <button class="dl-cat-btn ${selectedCat === c.id ? 'active' : ''}" data-cat-id="${esc(c.id)}">
-          <span>${esc(c.label)}</span>
-          <span class="gp-badge-count">${c.count}</span>
-        </button>`
-      )
-      .join('');
+  function renderHeader() {
+    const sec = SECTIONS.find((s) => s.id === selectedSectionId) || SECTIONS[0];
+    const titleEl = document.getElementById('dlSectionTitle');
+    const subEl = document.getElementById('dlSectionSubtitle');
+    if (titleEl) titleEl.textContent = sec.title;
+    if (subEl) subEl.textContent = sec.subtitle;
   }
 
   function renderResults() {
     const items = getFilteredItems();
     const box = document.getElementById('dlResults');
     const summary = document.getElementById('dlResultSummary');
-    summary.textContent = `Exibindo ${items.length} de ${ALL_ITEMS.length} itens`;
+    if (clearBtn) clearBtn.classList.toggle('visible', Boolean(queryText.trim()));
+    if (summary) summary.textContent = `${items.length} ${items.length === 1 ? 'item' : 'itens'}`;
+    if (!box) return;
 
     if (!items.length) {
-      box.innerHTML =
-        '<div class="dl-card"><div class="dl-card-info"><div class="dl-card-title">Nenhum resultado encontrado</div><div class="dl-card-what">Tente buscar por outro termo ou clique em "Todas as origens" / "Todas as Categorias".</div></div></div>';
+      box.innerHTML = `<div class="dl-empty">Nenhum item encontrado para o filtro informado.</div>`;
       return;
     }
 
     box.innerHTML = items
       .map((it) => {
-        const badge = Meta.getSourceBadgeMeta(it.sourceClass);
-        const actions = [];
-        if (it.kind === 'layer') {
-          actions.push(`<a class="gp-btn primary" href="index.html?layer=${encodeURIComponent(it.id)}" data-open-map-layer="${esc(it.id)}">Ver no Mapa ↗</a>`);
-        } else if (it.kind === 'basemap') {
-          actions.push(`<a class="gp-btn primary" href="index.html?basemap=${encodeURIComponent(it.id)}" data-open-map-basemap="${esc(it.id)}">Abrir Base ↗</a>`);
-        }
-        actions.push(`<button class="gp-btn" data-dl-meta="${esc(it.id)}">ⓘ Metadados</button>`);
+        const btns = [];
         if (it.redistributable && it.cfg.localFile) {
-          actions.push(`<a class="gp-btn" href="${esc(it.cfg.localFile)}" download>GeoJSON ↓</a>`);
-          actions.push(`<button class="gp-btn" data-dl-csv="${esc(it.id)}">CSV ↓</button>`);
-        } else if (it.kind !== 'doc') {
-          actions.push(`<span class="gp-src-pill src-cientifica" title="Serviço online não redistribuível em pacote local">Somente visualização</span>`);
+          const fmtLabel = it.kind === 'doc' ? (it.cfg.downloadLabel || 'JSON') : 'GEOJSON';
+          btns.push(`<a class="dl-act-btn" href="${esc(it.cfg.localFile)}" download>${esc(fmtLabel)}</a>`);
         }
-        const extUrl = it.cfg.officialUrl || it.cfg.externalUrl || (it.kind === 'doc' ? it.cfg.externalUrl : '');
-        if (extUrl) {
-          actions.push(`<a class="gp-btn" href="${esc(extUrl)}" target="_blank" rel="noopener">${it.kind === 'doc' ? 'Abrir PDF ↗' : 'Oficial ↗'}</a>`);
+        if (it.kind === 'layer') {
+          btns.push(`<a class="dl-act-btn" href="index.html?layer=${encodeURIComponent(it.id)}" data-open-map-layer="${esc(it.id)}">MAPA</a>`);
+        } else if (it.kind === 'basemap') {
+          btns.push(`<a class="dl-act-btn" href="index.html?basemap=${encodeURIComponent(it.id)}" data-open-map-basemap="${esc(it.id)}">MAPA</a>`);
+        } else if (it.cfg.externalUrl) {
+          btns.push(`<a class="dl-act-btn" href="${esc(it.cfg.externalUrl)}" target="_blank" rel="noopener">${esc(it.cfg.downloadLabel || 'ACESSAR')}</a>`);
         }
+        btns.push(`<button type="button" class="dl-act-btn" data-dl-meta="${esc(it.id)}">METADADOS</button>`);
 
         return `
-          <div class="dl-card">
-            <div class="dl-card-info">
-              <div class="dl-card-title">
-                <span>${esc(it.name)}</span>
-                <span class="gp-src-pill ${badge.cls}">${esc(badge.label)}</span>
-              </div>
-              <div class="dl-card-what"><b>O que é isto?</b> ${esc(it.whatIsThis)}</div>
-              <div class="dl-card-meta">
-                <span><b>Categoria:</b> ${esc(it.groupName)}</span>
-                <span><b>Órgão / Origem:</b> ${esc(it.orgao)}</span>
-                <span><b>Formato:</b> ${esc(it.format)}</span>
-              </div>
+          <div class="dl-row">
+            <div class="dl-row-name">${esc(it.displayLine)}</div>
+            <div class="dl-action-group">
+              ${btns.join('')}
             </div>
-            <div class="dl-card-actions">${actions.join('')}</div>
           </div>`;
       })
       .join('');
@@ -338,22 +413,20 @@
     if (!it || !it.redistributable || !it.cfg.localFile) return;
 
     let gj = null;
-    if (layerId === 'limite_municipal_ibge' && window.ARAQUARI_LIMIT_GEOJSON) {
-      gj = window.ARAQUARI_LIMIT_GEOJSON;
-    } else if (it.cfg.bundleKey && window.GEOARAQUARI_BUNDLE?.[it.cfg.bundleKey]) {
+    if (it.cfg.bundleKey && window.GEOARAQUARI_BUNDLE?.[it.cfg.bundleKey]) {
       gj = window.GEOARAQUARI_BUNDLE[it.cfg.bundleKey];
+    } else if (it.cfg.isLocalData && window.ARAQUARI_LIMITE_GEOJSON) {
+      gj = window.ARAQUARI_LIMITE_GEOJSON;
     } else {
       try {
         const r = await fetch(it.cfg.localFile);
         if (r.ok) gj = await r.json();
       } catch {
-        const gh = `https://eriksdhoffmann.github.io/Geoportal-Araquari/${it.cfg.localFile}`;
-        const r2 = await fetch(gh);
-        if (r2.ok) gj = await r2.json();
+        // ignore
       }
     }
     if (!gj?.features?.length) {
-      alert('Não foi possível carregar os dados para gerar o CSV neste ambiente.');
+      alert('Não foi possível carregar os registros desta camada para exportar em CSV.');
       return;
     }
 
@@ -386,111 +459,79 @@
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
+  function dispatchReturnToMap(e, opts) {
+    if (typeof window.__geoHandleReturnToMapClick === 'function') {
+      window.__geoHandleReturnToMapClick(e, opts);
+    }
+  }
+
   function openDlMetadataModal(itemId) {
     const it = ALL_ITEMS.find((x) => x.id === itemId);
     if (!it) return;
-    const badge = Meta.getSourceBadgeMeta(it.sourceClass);
     const meta = it.metaEntry.metadata;
-    document.getElementById('dlModalTitle').textContent = `Metadados — ${meta.nome_camada}`;
+    document.getElementById('dlModalTitle').textContent = it.cleanName;
+
     const rowsHtml = Meta.FIELD_LABELS.map(([k, lbl]) => {
       const val = meta[k] || 'Não informado pela fonte';
       const isUrl = typeof val === 'string' && /^https?:\/\//i.test(val);
-      return `<tr><th>${esc(lbl)}</th><td>${isUrl ? `<a href="${esc(val)}" target="_blank" rel="noopener">${esc(val)} ↗</a>` : esc(val)}</td></tr>`;
+      return `<tr><th>${esc(lbl)}</th><td>${isUrl ? `<a href="${esc(val)}" target="_blank" rel="noopener" style="color:#1d8ac7;word-break:break-all">${esc(val)}</a>` : esc(val)}</td></tr>`;
     }).join('');
-    document.getElementById('dlModalBody').innerHTML = `
-      <div class="gp-meta-hero">
-        <span class="gp-src-pill ${badge.cls}">${esc(badge.label)}</span>
-        <div style="margin-top:6px;font-size:13.5px"><b>O que é isto?</b> ${esc(it.whatIsThis)}</div>
-      </div>
+
+    const actionBtns = [];
+    if (it.redistributable && it.cfg.localFile) {
+      actionBtns.push(`<a class="dl-meta-btn primary" href="${esc(it.cfg.localFile)}" download>Baixar arquivo (${esc(it.kind === 'doc' ? (it.cfg.downloadLabel || 'JSON') : 'GeoJSON')})</a>`);
+      if (it.kind === 'layer') {
+        actionBtns.push(`<button type="button" class="dl-meta-btn" data-modal-csv="${esc(it.id)}">Exportar tabela (CSV)</button>`);
+      }
+    }
+    if (it.kind === 'layer') {
+      actionBtns.push(`<a class="dl-meta-btn" href="index.html?layer=${encodeURIComponent(it.id)}" data-open-map-layer="${esc(it.id)}">Visualizar no mapa</a>`);
+    } else if (it.kind === 'basemap') {
+      actionBtns.push(`<a class="dl-meta-btn" href="index.html?basemap=${encodeURIComponent(it.id)}" data-open-map-basemap="${esc(it.id)}">Visualizar no mapa</a>`);
+    } else if (it.cfg.externalUrl) {
+      actionBtns.push(`<a class="dl-meta-btn primary" href="${esc(it.cfg.externalUrl)}" target="_blank" rel="noopener">Acessar fonte oficial</a>`);
+    }
+
+    const bodyEl = document.getElementById('dlModalBody');
+    bodyEl.innerHTML = `
+      <div class="dl-meta-actions">${actionBtns.join('')}</div>
       <table class="gp-meta-table">${rowsHtml}</table>
     `;
+    bodyEl.querySelector('[data-modal-csv]')?.addEventListener('click', (e) => {
+      downloadCsvForLayer(e.currentTarget.dataset.modalCsv);
+    });
+    bodyEl.querySelector('[data-open-map-layer]')?.addEventListener('click', (e) => {
+      dispatchReturnToMap(e, { layerId: e.currentTarget.dataset.openMapLayer });
+    });
+    bodyEl.querySelector('[data-open-map-basemap]')?.addEventListener('click', (e) => {
+      dispatchReturnToMap(e, { basemapId: e.currentTarget.dataset.openMapBasemap });
+    });
     document.getElementById('dlModalBackdrop').classList.add('open');
   }
 
-  searchInput.addEventListener('input', () => {
+  searchInput?.addEventListener('input', () => {
     queryText = searchInput.value;
-    renderSidebar();
     renderResults();
   });
-  document.getElementById('dlSearchClear').addEventListener('click', () => {
+
+  clearBtn?.addEventListener('click', () => {
+    if (!searchInput) return;
     searchInput.value = '';
     queryText = '';
-    renderSidebar();
     renderResults();
     searchInput.focus();
   });
-  document.getElementById('dlCategoryList').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-cat-id]');
+
+  document.getElementById('dlCategoryList')?.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-sec-id]');
     if (!b) return;
-    selectedCat = b.dataset.catId;
+    selectedSectionId = b.dataset.secId;
     renderSidebar();
+    renderHeader();
     renderResults();
   });
-  document.getElementById('dlSourceFilters').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-src]');
-    if (!b) return;
-    selectedSrc = b.dataset.src;
-    document.querySelectorAll('#dlSourceFilters .dl-chip').forEach((c) => c.classList.toggle('active', c.dataset.src === selectedSrc));
-    renderSidebar();
-    renderResults();
-  });
-  function getAvailableMapOpener() {
-    try {
-      if (window.opener && !window.opener.closed && window.opener.GeoPortalMapNav) {
-        return window.opener;
-      }
-    } catch {
-      // Cross-origin ou opener indisponível
-    }
-    return null;
-  }
 
-  function handleReturnToMapClick(e, { layerId = '', basemapId = '' } = {}) {
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
-      return;
-    }
-    const opener = getAvailableMapOpener();
-    if (!opener) {
-      // Sem aba original disponível: navega na aba atual pelo href do link
-      return;
-    }
-    e.preventDefault();
-    try {
-      if (layerId) opener.GeoPortalMapNav.activateLayer(layerId);
-      else if (basemapId) opener.GeoPortalMapNav.activateBasemap(basemapId);
-      else opener.GeoPortalMapNav.focusMap();
-    } catch {
-      const link = e.target.closest('a[href]');
-      if (link) window.location.href = link.href;
-      return;
-    }
-    try {
-      opener.focus();
-    } catch {
-      // ignore
-    }
-    try {
-      window.close();
-    } catch {
-      // ignore
-    }
-  }
-
-  const dispatchReturnToMap = (e, opts) => {
-    if (typeof window.__geoHandleReturnToMapClick === 'function') {
-      window.__geoHandleReturnToMapClick(e, opts);
-      return;
-    }
-    handleReturnToMapClick(e, opts);
-  };
-
-  if (typeof window.__geoHandleReturnToMapClick !== 'function') {
-    document.querySelectorAll('[data-return-to-map]').forEach((el) => {
-      el.addEventListener('click', (e) => handleReturnToMapClick(e));
-    });
-  }
-
-  document.getElementById('dlResults').addEventListener('click', (e) => {
+  document.getElementById('dlResults')?.addEventListener('click', (e) => {
     const mapLayerLink = e.target.closest('[data-open-map-layer]');
     if (mapLayerLink) {
       dispatchReturnToMap(e, { layerId: mapLayerLink.dataset.openMapLayer });
@@ -504,20 +545,24 @@
     const mb = e.target.closest('[data-dl-meta]');
     if (mb) {
       openDlMetadataModal(mb.dataset.dlMeta);
-      return;
-    }
-    const cb = e.target.closest('[data-dl-csv]');
-    if (cb) {
-      downloadCsvForLayer(cb.dataset.dlCsv);
     }
   });
-  document.getElementById('dlModalClose').addEventListener('click', () => {
-    document.getElementById('dlModalBackdrop').classList.remove('open');
+
+  document.getElementById('dlModalClose')?.addEventListener('click', () => {
+    document.getElementById('dlModalBackdrop')?.classList.remove('open');
   });
-  document.getElementById('dlModalBackdrop').addEventListener('click', (e) => {
+
+  document.getElementById('dlModalBackdrop')?.addEventListener('click', (e) => {
     if (e.target.id === 'dlModalBackdrop') e.target.classList.remove('open');
   });
 
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.getElementById('dlModalBackdrop')?.classList.remove('open');
+    }
+  });
+
   renderSidebar();
+  renderHeader();
   renderResults();
 })();
