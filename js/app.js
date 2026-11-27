@@ -30,6 +30,11 @@
   let searchFilterText = '';
   const expandedGroups = new Set(LAYER_GROUPS.filter((g) => g.expanded).map((g) => g.id));
 
+  const isTouchDevice =
+    (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+    'ontouchstart' in window ||
+    (navigator.maxTouchPoints || 0) > 0;
+
   const map = L.map('map', {
     center: ARAQUARI_CENTER,
     zoom: 12,
@@ -38,7 +43,37 @@
     zoomControl: false,
     doubleClickZoom: true,
     preferCanvas: true,
+    inertiaDeceleration: isTouchDevice ? 3450 : 3000,
+    inertiaMaxSpeed: isTouchDevice ? 1275 : 1500,
   });
+
+  // Reduz em 15% a sensibilidade/velocidade de arraste por toque no mobile
+  const TOUCH_DRAG_SCALE = 0.85;
+  const mapDraggable = map.dragging && map.dragging._draggable;
+  if (mapDraggable && typeof mapDraggable._onMove === 'function') {
+    const origOnMove = mapDraggable._onMove.bind(mapDraggable);
+    mapDraggable._onMove = function (e) {
+      const isTouch = Boolean(e && ((e.touches && e.touches.length === 1) || e.pointerType === 'touch'));
+      if (!isTouch || !this._startPoint) {
+        return origOnMove(e);
+      }
+      const src = e.touches ? e.touches[0] : e;
+      const scaledX = this._startPoint.x + (src.clientX - this._startPoint.x) * TOUCH_DRAG_SCALE;
+      const scaledY = this._startPoint.y + (src.clientY - this._startPoint.y) * TOUCH_DRAG_SCALE;
+      const synthetic = {
+        type: e.type,
+        target: e.target,
+        originalEvent: e,
+        touches: [{ clientX: scaledX, clientY: scaledY }],
+        clientX: scaledX,
+        clientY: scaledY,
+        pointerType: 'touch',
+        preventDefault: () => e.preventDefault && e.preventDefault(),
+        stopPropagation: () => e.stopPropagation && e.stopPropagation(),
+      };
+      return origOnMove(synthetic);
+    };
+  }
 
   const initRightPad = window.innerWidth <= 760 ? 32 : 390;
   map.fitBounds(ARAQUARI_BOUNDS, {
